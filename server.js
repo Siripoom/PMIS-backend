@@ -2,7 +2,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
-
+const authRoutes = require("./routes/authRoutes");
+const drainageStationRoutes = require("./routes/drainageStationRoutes");
 // Load environment variables
 dotenv.config();
 
@@ -17,6 +18,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Production System API" });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api", drainageStationRoutes);
 
 // Connect to PostgreSQL using Sequelize
 sequelize
