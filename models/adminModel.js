@@ -30,7 +30,7 @@ const Admin = sequelize.define('Admin', {
         defaultValue: 'user' // กำหนดค่าเริ่มต้นเป็น user
     }
 }, {
-    tableName: 'admin',
+    tableName: 'data',
     timestamps: false
 });
 

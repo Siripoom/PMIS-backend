@@ -15,7 +15,7 @@ const PORT = 3000;
 app.use(express.json()); // ✅ รองรับ JSON Body
 
 // ✅ ใช้ route /auth สำหรับ register และ login
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Simple route for testing
 app.get("/", (req, res) => {
