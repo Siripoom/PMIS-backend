@@ -1,11 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/dbConfig');
+const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
+
 
 const Admin = sequelize.define('Admin', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true
+        defaultValue: DataTypes.UUIDV4, // สร้าง UUID อัตโนมัติ
+        allowNull: false
     },
     firstName: {
         type: DataTypes.STRING,
@@ -30,7 +33,7 @@ const Admin = sequelize.define('Admin', {
         defaultValue: 'user' // กำหนดค่าเริ่มต้นเป็น user
     }
 }, {
-    tableName: 'data',
+    tableName: 'admin',
     timestamps: false
 });
 

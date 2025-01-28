@@ -3,6 +3,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
+const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
+
 
 // Load environment variables
 dotenv.config();
@@ -24,7 +26,7 @@ app.get("/", (req, res) => {
 
 // ✅ Sync Database และรันเซิร์ฟเวอร์
 sequelize
-  .sync({ force: false }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
+  .sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
   .then(() => {
     console.log("✅ Database synchronized...");
 

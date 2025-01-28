@@ -1,25 +1,19 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const jwt = require("jsonwebtoken");
 
 const authenticateToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access Denied' });
+    const token = req.header("Authorization")?.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "Access Denied" });
+    }
 
     try {
-        const verified = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
-        req.user = verified;
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = verified; // เก็บข้อมูลผู้ใช้จาก Token
         next();
     } catch (err) {
-        res.status(400).json({ message: 'Invalid Token' });
+        res.status(403).json({ message: "Invalid Token" });
     }
 };
 
-// 📌 ตรวจสอบว่าเป็น Admin หรือไม่
-const isAdmin = (req, res, next) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden: Admins only' });
-    }
-    next();
-};
-
-module.exports = { authenticateToken, isAdmin };
+module.exports = { authenticateToken };
