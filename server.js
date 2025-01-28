@@ -3,7 +3,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
-const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
+const stationRoutes = require("./routes/stationRoutes");
+
 
 
 // Load environment variables
@@ -18,6 +19,8 @@ app.use(express.json()); // ✅ รองรับ JSON Body
 
 // ✅ ใช้ route /auth สำหรับ register และ login
 app.use("/api/auth", authRoutes);
+
+app.use("/api/stations", stationRoutes);
 
 // Simple route for testing
 app.get("/", (req, res) => {

@@ -1,27 +1,23 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/dbConfig');
-const Admin = require('./adminModel'); // FK reference
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/dbConfig");
 
-const Station = sequelize.define('Station', {
-    Station_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-    },
-    Station_name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    Officer_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: Admin,
-            key: 'Admin_id'
-        }
-    }
+const Station = sequelize.define("Station", {
+  id: {
+    type: DataTypes.UUID,
+    primaryKey: true,
+    defaultValue: DataTypes.UUIDV4,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  type: {
+    type: DataTypes.ENUM("ถนน", "อุโมงค์"), // ใช้ภาษาไทยแทน
+    allowNull: false,
+  },
 }, {
-    tableName: 'Station',
-    timestamps: false
+  tableName: "stations",
+  timestamps: true,
 });
 
 module.exports = Station;
