@@ -2,6 +2,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
+const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
 
 // Load environment variables
 dotenv.config();
@@ -11,24 +12,26 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(express.json());
+app.use(express.json()); // ✅ รองรับ JSON Body
+
+// ✅ ใช้ route /auth สำหรับ register และ login
+app.use("/auth", authRoutes);
 
 // Simple route for testing
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Production System API" });
 });
 
-// Connect to PostgreSQL using Sequelize
+// ✅ Sync Database และรันเซิร์ฟเวอร์
 sequelize
-  .authenticate()
+  .sync({ force: false }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
   .then(() => {
-    console.log("✅ Database connected...");
+    console.log("✅ Database synchronized...");
 
-    // Start the server after successful database connection
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("❌ Unable to connect to the database:", err.message);
+    console.error("❌ Unable to sync database:", err.message);
   });
