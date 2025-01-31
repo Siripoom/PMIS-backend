@@ -102,4 +102,27 @@ const getMe = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe }; // ส่งออก register, login, getMe
+const resetPassword = async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        // ✅ ตรวจสอบว่า Email มีอยู่ในระบบหรือไม่
+        const user = await Admin.findOne({ where: { email } }); // ไม่ต้องระบุ role
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // ✅ เข้ารหัสรหัสผ่านใหม่
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // ✅ อัปเดตรหัสผ่านใหม่ลงในฐานข้อมูล
+        await user.update({ password: hashedPassword });
+
+        res.json({ message: "Password reset successful!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { register, login, getMe, resetPassword }; // ส่งออก register, login, getMe

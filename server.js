@@ -3,6 +3,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
+const cors = require("cors");
 const stationRoutes = require("./routes/stationRoutes");
 
 
@@ -14,6 +15,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+app.use(cors());
+
 // Middleware
 app.use(express.json()); // ✅ รองรับ JSON Body
 
@@ -21,6 +24,7 @@ app.use(express.json()); // ✅ รองรับ JSON Body
 app.use("/api/auth", authRoutes);
 
 app.use("/api/stations", stationRoutes);
+
 
 // Simple route for testing
 app.get("/", (req, res) => {
