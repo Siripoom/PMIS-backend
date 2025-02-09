@@ -5,6 +5,7 @@ const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
 const cors = require("cors");
 const stationRoutes = require("./routes/stationRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 
 
 
@@ -24,6 +25,8 @@ app.use(express.json()); // ✅ รองรับ JSON Body
 app.use("/api/auth", authRoutes);
 
 app.use("/api/stations", stationRoutes);
+
+app.use("/api/projects", projectRoutes);
 
 
 // Simple route for testing
