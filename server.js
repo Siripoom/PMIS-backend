@@ -25,8 +25,6 @@ app.use(express.json()); // ✅ รองรับ JSON Body
 // ✅ ใช้ route /auth สำหรับ register และ login
 app.use("/api/auth", authRoutes);
 
-app.use("/api/stations", stationRoutes);
-
 app.use("/api/projects", projectRoutes);
 
 app.use("/api/progress", progressRoutes);
