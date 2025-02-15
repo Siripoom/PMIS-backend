@@ -28,7 +28,7 @@ const Admin = sequelize.define('Admin', {
         allowNull: false
     },
     role: {
-        type: DataTypes.ENUM('admin', 'user'),
+        type: DataTypes.ENUM('admin', 'manager', 'user'),
         allowNull: false,
         defaultValue: 'user' // กำหนดค่าเริ่มต้นเป็น user
     }

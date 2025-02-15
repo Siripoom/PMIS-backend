@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า aut
 const cors = require("cors");
 const stationRoutes = require("./routes/stationRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const progressRoutes = require("./routes/progressRoutes");
 
 
 
@@ -28,6 +29,8 @@ app.use("/api/stations", stationRoutes);
 
 app.use("/api/projects", projectRoutes);
 
+app.use("/api/progress", progressRoutes);
+
 
 // Simple route for testing
 app.get("/", (req, res) => {
@@ -35,8 +38,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Sync Database และรันเซิร์ฟเวอร์
-sequelize
-  .sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
+sequelize.sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
   .then(() => {
     console.log("✅ Database synchronized...");
 
