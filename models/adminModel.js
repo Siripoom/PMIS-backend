@@ -1,40 +1,42 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/dbConfig');
-const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/dbConfig");
 
-
-const Admin = sequelize.define('Admin', {
-    id: {
-        type: DataTypes.UUID,
+const User = sequelize.define("User", {
+    user_id: {
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        defaultValue: DataTypes.UUIDV4, // สร้าง UUID อัตโนมัติ
-        allowNull: false
+        autoIncrement: true
     },
-    firstName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    lastName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    email: {
-        type: DataTypes.STRING,
+    username: {
+        type: DataTypes.STRING(50),
         allowNull: false,
         unique: true
     },
     password: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false
     },
-    role: {
-        type: DataTypes.ENUM('admin', 'manager', 'user'),
+    email: {
+        type: DataTypes.STRING(100),
         allowNull: false,
-        defaultValue: 'user' // กำหนดค่าเริ่มต้นเป็น user
+        unique: true
+    },
+    role: {
+        type: DataTypes.ENUM("Admin", "Manager", "User"),
+        allowNull: false,
+        defaultValue: "User"
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
-    tableName: 'admin',
+    tableName: "users",
     timestamps: false
 });
 
-module.exports = Admin;
+module.exports = User;
