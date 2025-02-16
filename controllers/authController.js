@@ -7,31 +7,39 @@ require('dotenv').config();
 
 // REGISTER API (เฉพาะ Admin เท่านั้น)
 const register = async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
 
     try {
-        // ตรวจสอบว่า Email มีอยู่แล้วหรือไม่
         const existingUser = await Admin.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
-        // เข้ารหัสรหัสผ่าน
+        // ✅ ตรวจสอบว่า Role ที่รับมาเป็นค่าที่ถูกต้อง
+        const validRoles = ["admin", "manager", "user"];
+        const assignedRole = validRoles.includes(role) ? role : "user";
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // บันทึกข้อมูลผู้ใช้ (ลบ role ออก)
         const newUser = await Admin.create({
-            id: uuidv4(), // สร้าง UUID
+            id: uuidv4(),
             firstName,
             lastName,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            role: assignedRole // ✅ ใช้ค่าที่ Validate แล้ว
         });
 
         res.status(201).json({
             message: "User registered successfully",
-            data: newUser
+            data: {
+                id: newUser.id,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                email: newUser.email,
+                role: newUser.role
+            }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -39,26 +47,25 @@ const register = async (req, res) => {
 };
 
 
+
 // LOGIN API (เฉพาะ Admin เท่านั้น)
 const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // ตรวจสอบ Email
         const user = await Admin.findOne({ where: { email } });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // ตรวจสอบรหัสผ่าน
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        // สร้าง JWT Token (ลบ role ออก)
+        // ✅ สร้าง Token ใหม่ (เอา email ออกและเพิ่ม role)
         const token = jwt.sign(
-            { id: user.id, email: user.email }, // ไม่ต้องใส่ role
+            { id: user.id, role: user.role }, // ✅ ลบ email ออกและใส่ role เข้าไป
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
@@ -71,6 +78,7 @@ const login = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 const getMe = async (req, res) => {
     try {
@@ -102,4 +110,27 @@ const getMe = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe }; // ส่งออก register, login, getMe
+const resetPassword = async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        // ✅ ตรวจสอบว่า Email มีอยู่ในระบบหรือไม่
+        const user = await Admin.findOne({ where: { email } }); // ไม่ต้องระบุ role
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // ✅ เข้ารหัสรหัสผ่านใหม่
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // ✅ อัปเดตรหัสผ่านใหม่ลงในฐานข้อมูล
+        await user.update({ password: hashedPassword });
+
+        res.json({ message: "Password reset successful!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { register, login, getMe, resetPassword }; // ส่งออก register, login, getMe

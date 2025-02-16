@@ -3,7 +3,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
-const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
+const cors = require("cors");
+const stationRoutes = require("./routes/stationRoutes");
+const projectRoutes = require("./routes/projectRoutes");
+const progressRoutes = require("./routes/progressRoutes");
+
 
 
 // Load environment variables
@@ -13,11 +17,18 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+app.use(cors());
+
 // Middleware
 app.use(express.json()); // ✅ รองรับ JSON Body
 
 // ✅ ใช้ route /auth สำหรับ register และ login
 app.use("/api/auth", authRoutes);
+
+app.use("/api/projects", projectRoutes);
+
+app.use("/api/progress", progressRoutes);
+
 
 // Simple route for testing
 app.get("/", (req, res) => {
@@ -25,8 +36,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Sync Database และรันเซิร์ฟเวอร์
-sequelize
-  .sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
+sequelize.sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
   .then(() => {
     console.log("✅ Database synchronized...");
 
