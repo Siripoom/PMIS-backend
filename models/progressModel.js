@@ -37,7 +37,7 @@ const Progress = sequelize.define("Progress", {
     },
   },
 }, {
-  tableName: "user_table",
+  tableName: "progress",
   timestamps: true, // Sequelize จะสร้าง `createdAt` และ `updatedAt` อัตโนมัติ
 });
 
