@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/adminModel');
+const Admin = require('../models/userModel');
 const { v4: uuidv4 } = require('uuid'); // v4 คือ UUID เวอร์ชัน 4
 
 require('dotenv').config();
