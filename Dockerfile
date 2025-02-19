@@ -1,26 +1,21 @@
-# Use an official Node.js runtime as the base image
-FROM node:18
+# ใช้ Node.js เวอร์ชัน 18 บน Alpine (ขนาดเล็กกว่า ลดการใช้ RAM)
+FROM node:18-alpine
 
-# Install netcat for wait-for-it.sh to work
-RUN apt-get update && apt-get install -y netcat
+# ติดตั้ง netcat สำหรับ Alpine
+RUN apk add --no-cache netcat-openbsd
 
-# Set the working directory
+# ตั้งค่า Working Directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock to install dependencies
+# คัดลอก package.json และติดตั้ง dependencies
 COPY package*.json yarn.lock ./
-
-# Install dependencies
 RUN yarn install --production
 
-# Copy the rest of the application files
+# คัดลอกไฟล์โค้ดทั้งหมด
 COPY . .
 
-# Make wait-for-it.sh executable
-RUN chmod +x wait-for-it.sh
-
-# Expose the application port
+# เปิดพอร์ต
 EXPOSE 3000
 
-# Start the application with wait-for-it.sh
-CMD ["./wait-for-it.sh", "db:5433", "--", "npm", "start"]
+# Start the app
+CMD ["npm", "start"]
