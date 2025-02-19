@@ -1,15 +1,33 @@
+version: "3.8"
+
 services:
   db:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "5432:5432" # ✅ ต้องตรงกับ DB_PORT
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db # ✅ ต้องตรงกับ db ใน services
+      DB_PORT: 5432
+      DB_DIALECT: postgres
+      JWT_SECRET: your_jwt_secret_key
+    ports:
+      - "3000:3000"
 
 volumes:
   pgdata:
