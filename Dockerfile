@@ -8,7 +8,7 @@ RUN apk add --no-cache netcat-openbsd
 WORKDIR /app
 
 # คัดลอก package.json และติดตั้ง dependencies
-COPY package*.json yarn.lock ./
+COPY package*.json ./
 RUN yarn install --production
 
 # คัดลอกไฟล์โค้ดทั้งหมด
