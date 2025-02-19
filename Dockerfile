@@ -15,7 +15,7 @@ COPY . .
 COPY wait-for-it.sh .
 
 # Make wait-for-it.sh executable
-RUN chmod +x wait-for-it.sh
+# RUN chmod +x wait-for-it.sh
 
 
 
