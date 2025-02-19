@@ -1,26 +1,26 @@
 # Use an official Node.js runtime as the base image
 FROM node:18
 
+# Install netcat for wait-for-it.sh to work
+RUN apt-get update && apt-get install -y netcat
+
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies
-COPY package*.json ./
+# Copy package.json and yarn.lock to install dependencies
+COPY package*.json yarn.lock ./
 
 # Install dependencies
-RUN yarn install
+RUN yarn install --production
 
-# Copy the rest of the application files, including wait-for-it.sh
+# Copy the rest of the application files
 COPY . .
-#COPY wait-for-it.sh .
 
 # Make wait-for-it.sh executable
-# RUN chmod +x wait-for-it.sh
-
-
+RUN chmod +x wait-for-it.sh
 
 # Expose the application port
 EXPOSE 3000
-#"./wait-for-it.sh",
-# Start the application with wait-for-it script
-CMD [ "db", "5433", "--", "npm", "start"]
+
+# Start the application with wait-for-it.sh
+CMD ["./wait-for-it.sh", "db:5433", "--", "npm", "start"]
