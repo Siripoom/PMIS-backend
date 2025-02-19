@@ -12,7 +12,7 @@ RUN yarn install
 
 # Copy the rest of the application files, including wait-for-it.sh
 COPY . .
-COPY wait-for-it.sh .
+#COPY wait-for-it.sh .
 
 # Make wait-for-it.sh executable
 # RUN chmod +x wait-for-it.sh
@@ -21,6 +21,6 @@ COPY wait-for-it.sh .
 
 # Expose the application port
 EXPOSE 3000
-
+#"./wait-for-it.sh",
 # Start the application with wait-for-it script
-CMD ["./wait-for-it.sh", "db", "5433", "--", "npm", "start"]
+CMD [ "db", "5433", "--", "npm", "start"]
