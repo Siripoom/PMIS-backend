@@ -18,7 +18,8 @@ const Project = sequelize.define("Project", {
   start_date: {
     type: DataTypes.DATE,
     allowNull: false,
-  },
+    defaultValue: new Date() // ✅ ใช้ Date() ของ JavaScript เป็นค่าเริ่มต้น
+},
   end_date: {
     type: DataTypes.DATE,
   },

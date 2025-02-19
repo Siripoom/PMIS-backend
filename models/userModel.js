@@ -1,10 +1,11 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/dbConfig");
+const { v4: uuidv4 } = require("uuid"); // ✅ เพิ่มการ import uuid
 
 const User = sequelize.define("User", {
     user_id: {
         type: DataTypes.UUID,
-        defaultValue: uuidv4(),
+        defaultValue: DataTypes.UUIDV4, // ✅ เปลี่ยนเป็น DataTypes.UUIDV4
         primaryKey: true,
     },
     username: {
