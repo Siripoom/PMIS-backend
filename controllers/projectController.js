@@ -1,21 +1,30 @@
+const { Sequelize } = require("sequelize"); // ✅ เพิ่มบรรทัดนี้
 const Project = require("../models/projectModel");
+
 
 // ✅ Create Project
 const createProject = async (req, res) => {
-  const { name, description, status } = req.body;
+  const { project_name, description, status, budget, start_date } = req.body;
+
   try {
     const newProject = await Project.create({
-      name,
+      project_name,
       description,
       status,
-      createdBy: req.user.id, // ใช้ ID ของผู้ใช้ที่ล็อกอิน
+      budget,
+      start_date: start_date ? new Date(start_date) : new Date(), // ✅ ให้ใช้วันที่ปัจจุบัน
+      created_by: req.user.id // ✅ ใช้ user_id จาก Token ที่ล็อกอิน
     });
 
-    res.status(201).json({ message: "Project created successfully", project: newProject });
+    res.status(201).json({
+      message: "Project created successfully",
+      project: newProject
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ Get All Projects
 const getAllProjects = async (req, res) => {

@@ -4,9 +4,10 @@ const dotenv = require("dotenv");
 const sequelize = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
 const cors = require("cors");
-
 const projectRoutes = require("./routes/projectRoutes");
 const progressRoutes = require("./routes/progressRoutes");
+const resourceRoutes = require("./routes/resourceRoutes");
+const resourceUsageRoutes = require("./routes/resourceUsageRoutes");
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +28,10 @@ app.use("/api/projects", projectRoutes);
 
 app.use("/api/progress", progressRoutes);
 
+app.use("/api/resource", resourceRoutes);
+
+app.use("/api/resource-usage", resourceUsageRoutes);
+
 // Simple route for testing
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Production System API" });
@@ -34,7 +39,7 @@ app.get("/", (req, res) => {
 
 // ✅ Sync Database และรันเซิร์ฟเวอร์
 sequelize
-  .sync({ force: true }) // เปลี่ยนเป็น `true` ถ้าต้องการล้างตารางเก่า
+  .sync({ alter: true })
   .then(() => {
     console.log("✅ Database synchronized...");
 
