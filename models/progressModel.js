@@ -11,17 +11,13 @@ const Progress = sequelize.define("Progress", {
   project_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: "projects",
-      key: "project_id",
-    },
   },
   progress: {
     type: DataTypes.INTEGER,
     allowNull: false,
     validate: {
       min: 0,
-      max: 100, // เปอร์เซ็นต์ต้องอยู่ในช่วง 0 - 100
+      max: 100,
     },
   },
   update_note: {
@@ -31,14 +27,10 @@ const Progress = sequelize.define("Progress", {
   updated_by: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: "users",
-      key: "user_id",
-    },
   },
 }, {
   tableName: "progress",
-  timestamps: true, // Sequelize จะสร้าง `createdAt` และ `updatedAt` อัตโนมัติ
+  timestamps: true,
 });
 
 module.exports = Progress;

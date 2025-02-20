@@ -2,36 +2,36 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/dbConfig");
 const { v4: uuidv4 } = require("uuid");
 
-const Resource = sequelize.define("Resource", {
-    resource_id: {
+const ProjectResource = sequelize.define("ProjectResource", {
+    id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: uuidv4(),
         allowNull: false
     },
-    resource_name: {
-        type: DataTypes.STRING(100),
-        allowNull: false
+    project_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
     },
-    quantity: {
+    resource_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+    },
+    used_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    unit: {
-        type: DataTypes.STRING(50),
+    allocated_by: {
+        type: DataTypes.UUID,
         allowNull: false
     },
-    created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
-    },
-    updated_at: {
+    allocated_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
     }
 }, {
-    tableName: "resources",
+    tableName: "project_resources",
     timestamps: false
 });
 
-module.exports = Resource;
+module.exports = ProjectResource;

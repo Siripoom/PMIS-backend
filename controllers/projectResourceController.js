@@ -1,16 +1,18 @@
 const { v4: uuidv4 } = require('uuid');
-const ResourceUsage = require('../models/resourceUsageModel');
+const ProjectResource = require('../models/ProjectResourceModel');
 
 const trackResourceUsage = async (req, res) => {
     try {
-        const { project_id, resource_id, used_quantity } = req.body;
+        const { project_id, resource_id, used_quantity, allocated_by } = req.body;
 
-        const usage = await ResourceUsage.create({
-            id: uuidv4(),
+        const usage = await ProjectResource.create({
             project_id,
             resource_id,
-            used_quantity
+            used_quantity,
+            allocated_by,
+            allocated_at: new Date() // ✅ ใช้ timestamp ตามที่ออกแบบ
         });
+
         res.status(201).json({ message: "Resource usage tracked", data: usage });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -20,10 +22,12 @@ const trackResourceUsage = async (req, res) => {
 const getUsageByProject = async (req, res) => {
     try {
         const { project_id } = req.params;
-        const usage = await ResourceUsage.findAll({ where: { project_id } });
+        const usage = await ProjectResource.findAll({
+            where: { project_id }
+        });
 
-        if (!usage.length) {
-            return res.status(404).json({ message: "No usage data found for this project" });
+        if (usage.length === 0) {
+            return res.status(404).json({ message: "No resource usage found for this project" });
         }
 
         res.status(200).json(usage);
