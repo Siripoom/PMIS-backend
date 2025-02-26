@@ -1,48 +1,69 @@
-// Import modules
 const express = require("express");
 const dotenv = require("dotenv");
-const sequelize = require("./config/dbConfig");
-const authRoutes = require("./routes/authRoutes"); // ✅ นำเข้า authRoutes
 const cors = require("cors");
+const sequelize = require("./config/dbConfig");
+
+// ✅ โหลด environment variables
+dotenv.config();
+
+// ✅ Import Models ที่นี่เพื่อให้ Sequelize โหลดก่อน sync
+require("./models/projectModel");
+require("./models/progressModel");
+require("./models/ProjectResourceModel");
+require("./models/resourceModel");
+require("./models/userModel");
+
+// ✅ Import Routes
+const authRoutes = require("./routes/authRoutes"); 
 const projectRoutes = require("./routes/projectRoutes");
 const progressRoutes = require("./routes/progressRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
-const resourceUsageRoutes = require("./routes/resourceUsageRoutes");
+const projectResourceRoutes = require("./routes/projectResourceRoutes");
 
+<<<<<<< HEAD
 // Load environment variables
 dotenv.config();
 
 // Create an Express app
+=======
+// ✅ Create an Express app
+>>>>>>> resource-management-api
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-// Middleware
-app.use(express.json()); // ✅ รองรับ JSON Body
+// ✅ Middleware
+app.use(express.json()); 
 
-// ✅ ใช้ route /auth สำหรับ register และ login
+// ✅ Routes
 app.use("/api/auth", authRoutes);
-
 app.use("/api/projects", projectRoutes);
-
 app.use("/api/progress", progressRoutes);
-
 app.use("/api/resource", resourceRoutes);
+app.use("/api/projectResourceRoutes", projectResourceRoutes);
 
+<<<<<<< HEAD
 app.use("/api/resource-usage", resourceUsageRoutes);
 
 // Simple route for testing
+=======
+// ✅ Simple route for testing
+>>>>>>> resource-management-api
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Production System API" });
 });
 
+<<<<<<< HEAD
 // ✅ Sync Database และรันเซิร์ฟเวอร์
 sequelize
   .sync({ alter: true })
+=======
+// ✅ Sync Database และเริ่มรันเซิร์ฟเวอร์
+sequelize.sync({ alter: true }) 
+>>>>>>> resource-management-api
   .then(() => {
     console.log("✅ Database synchronized...");
-
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });

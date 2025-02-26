@@ -10,22 +10,22 @@ const Project = sequelize.define("Project", {
   },
   project_name: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: false, // ✅ ถ้าไม่ส่งมาใน `POST` จะเกิด Validation Error
   },
   description: {
     type: DataTypes.TEXT,
   },
   start_date: {
     type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: new Date() // ✅ ใช้ Date() ของ JavaScript เป็นค่าเริ่มต้น
-},
+    allowNull: false, // ✅ ถ้าไม่ส่งมาจะเกิด Error
+    defaultValue: new Date()
+  },
   end_date: {
     type: DataTypes.DATE,
   },
   budget: {
     type: DataTypes.DECIMAL(12, 2),
-    allowNull: false,
+    allowNull: false, // ✅ ฟิลด์นี้ต้องถูกส่งมา
   },
   status: {
     type: DataTypes.ENUM("Planned", "In Progress", "Completed", "Delayed"),
@@ -33,11 +33,12 @@ const Project = sequelize.define("Project", {
   },
   created_by: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: false, // ✅ ถ้าไม่ส่ง user_id จะเกิด Error
   },
 }, {
   tableName: "projects",
-  timestamps: true, // Sequelize จะจัดการ createdAt และ updatedAt ให้อัตโนมัติ
+  timestamps: true,
 });
+
 
 module.exports = Project;

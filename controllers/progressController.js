@@ -3,21 +3,21 @@ const Project = require("../models/projectModel");
 
 // ✅ บันทึกอัปเดตความคืบหน้าโครงการ
 const addProgressUpdate = async (req, res) => {
-  const { projectId, updateText, progressPercentage } = req.body;
+  const { project_id, update_note, progress } = req.body;
 
   try {
     // ตรวจสอบว่าโครงการมีอยู่จริงหรือไม่
-    const project = await Project.findByPk(projectId);
+    const project = await Project.findByPk(project_id);
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // บันทึกความคืบหน้า
+    // ✅ ใช้ `req.user.id` จาก JWT แทนการส่ง `updated_by` ใน Request Body
     const newProgress = await Progress.create({
-      projectId,
-      updateText,
-      progressPercentage,
-      updatedBy: req.user.id, // ใช้ ID ของผู้ใช้ที่ล็อกอิน
+      project_id,
+      update_note,
+      progress,
+      updated_by: req.user.id, // ✅ ดึงจาก Token อัตโนมัติ
     });
 
     res.status(201).json({ message: "Progress update added", progress: newProgress });
