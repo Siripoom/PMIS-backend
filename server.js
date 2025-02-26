@@ -19,15 +19,12 @@ const projectRoutes = require("./routes/projectRoutes");
 const progressRoutes = require("./routes/progressRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
 const projectResourceRoutes = require("./routes/projectResourceRoutes");
+const budgetRoutes = require("./routes/budgetRoutes");
 
-<<<<<<< HEAD
 // Load environment variables
 dotenv.config();
 
 // Create an Express app
-=======
-// ✅ Create an Express app
->>>>>>> resource-management-api
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -42,26 +39,16 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/resource", resourceRoutes);
 app.use("/api/projectResourceRoutes", projectResourceRoutes);
-
-<<<<<<< HEAD
-app.use("/api/resource-usage", resourceUsageRoutes);
+app.use("/api/budget", budgetRoutes);
 
 // Simple route for testing
-=======
-// ✅ Simple route for testing
->>>>>>> resource-management-api
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Production System API" });
 });
 
-<<<<<<< HEAD
 // ✅ Sync Database และรันเซิร์ฟเวอร์
 sequelize
   .sync({ alter: true })
-=======
-// ✅ Sync Database และเริ่มรันเซิร์ฟเวอร์
-sequelize.sync({ alter: true }) 
->>>>>>> resource-management-api
   .then(() => {
     console.log("✅ Database synchronized...");
     app.listen(PORT, () => {
