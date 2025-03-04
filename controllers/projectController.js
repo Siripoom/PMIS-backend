@@ -1,27 +1,18 @@
-const { Sequelize } = require("sequelize"); // ✅ ใช้สำหรับ Query Database
+const { Sequelize } = require("sequelize");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
+const { createLog } = require("../controllers/logController");
 
 // ✅ Create Project
 const createProject = async (req, res) => {
   try {
-    const { project_name, description, status, budget, start_date, end_date, username } = req.body;
+    const { project_name, description, status, budget, start_date, end_date } = req.body;
 
-    // ✅ ตรวจสอบว่ามีการส่ง username มาหรือไม่
-    if (!username) {
-      return res.status(400).json({ error: "Username is required" });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized: User information is missing" });
     }
 
-    // ✅ ค้นหา user_id จาก username ในฐานข้อมูล
-    const user = await User.findOne({ where: { username } });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" }); // ❌ ถ้าไม่มี user ห้ามสร้างโครงการ
-    }
-
-    const created_by = user.user_id;
-
-    // ✅ สร้างโครงการโดยใช้ user_id ของ username ที่เจอ
+    // ✅ สร้างโครงการ
     const newProject = await Project.create({
       project_name,
       description,
@@ -29,17 +20,15 @@ const createProject = async (req, res) => {
       budget,
       start_date: start_date ? new Date(start_date) : new Date(),
       end_date: end_date ? new Date(end_date) : null,
-      created_by, // ✅ ใช้ user_id ของ username ที่เจอ
+      created_by: req.user.id, // ✅ ใช้ user_id จาก req.user
     });
+
+    // ✅ บันทึก Log การสร้างโครงการ
+    await createLog(req.user.id, `สร้างโครงการ ${newProject.project_name}`, req);
 
     res.status(201).json({
       message: "Project created successfully",
       project: newProject,
-      user: {
-        user_id: user.user_id,
-        username: user.username,
-        email: user.email,
-      }, // ✅ คืนค่าข้อมูล user ที่สร้างโครงการกลับไปด้วย
     });
 
   } catch (err) {
@@ -48,26 +37,32 @@ const createProject = async (req, res) => {
   }
 };
 
-
-
-// ✅ Get All Projects
+// ✅ ฟังก์ชันดึงข้อมูลทุกโครงการ
 const getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll();
-    res.status(200).json({ total:projects.length,projects });
+    
+    // ✅ บันทึก Log การเรียกดูโครงการทั้งหมด
+    await createLog(req.user.id, "ดูโครงการทั้งหมด", req);
+
+    res.status(200).json({ total: projects.length, projects });
   } catch (err) {
     console.error("❌ Error fetching projects:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
-// ✅ Get Project By ID
+// ✅ ฟังก์ชันดึงข้อมูลโครงการตาม ID
 const getProjectById = async (req, res) => {
   try {
     const project = await Project.findByPk(req.params.id);
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
+
+    // ✅ บันทึก Log การเข้าถึงโครงการ
+    await createLog(req.user.id, `ดูโครงการ ${project.project_name}`, req);
+
     res.status(200).json({ project });
   } catch (err) {
     console.error("❌ Error fetching project:", err);
@@ -80,9 +75,8 @@ const updateProject = async (req, res) => {
   try {
     const { project_name, budget } = req.body;
 
-    // ✅ ป้องกันค่าว่าง
-    if (project_name === "" || budget === "") {
-      return res.status(400).json({ error: "Project name and budget cannot be empty" });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized: User information is missing" });
     }
 
     const project = await Project.findByPk(req.params.id);
@@ -91,6 +85,10 @@ const updateProject = async (req, res) => {
     }
 
     await project.update(req.body);
+
+    // ✅ บันทึก Log การแก้ไขโครงการ
+    await createLog(req.user.id, `แก้ไขโครงการ ${project.project_name}`, req);
+
     res.status(200).json({ message: "Project updated successfully", project });
 
   } catch (err) {
@@ -102,12 +100,20 @@ const updateProject = async (req, res) => {
 // ✅ Delete Project
 const deleteProject = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized: User information is missing" });
+    }
+
     const project = await Project.findByPk(req.params.id);
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
     await project.destroy();
+
+    // ✅ บันทึก Log การลบโครงการ
+    await createLog(req.user.id, `ลบโครงการ ${project.project_name}`, req);
+
     res.status(200).json({ message: "Project deleted successfully" });
 
   } catch (err) {
