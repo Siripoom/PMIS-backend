@@ -6,14 +6,14 @@ const {
   updateProject,
   deleteProject,
 } = require("../controllers/projectController");
-const { authenticateToken } = require("../middlewares/authMiddleware");
+//const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", authenticateToken, createProject); // ✅ สร้างโครงการ
-router.get("/", authenticateToken, getAllProjects); // ✅ ดูโครงการทั้งหมด
-router.get("/:id", authenticateToken, getProjectById); // ✅ ดูโครงการเดี่ยว
-router.put("/:id", authenticateToken, updateProject); // ✅ แก้ไขโครงการ
-router.delete("/:id", authenticateToken, deleteProject); // ✅ ลบโครงการ
+router.post("/",  createProject); // ✅ สร้างโครงการ
+router.get("/",  getAllProjects); // ✅ ดูโครงการทั้งหมด
+router.get("/:id",  getProjectById); // ✅ ดูโครงการเดี่ยว
+router.put("/:id",  updateProject); // ✅ แก้ไขโครงการ
+router.delete("/:id",  deleteProject); // ✅ ลบโครงการ
 
 module.exports = router;

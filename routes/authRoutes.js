@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/me', authenticateToken, getMe);  
+router.get('/me',  authenticateToken,getMe);  //authenticateToken,
 router.post('/reset-password', resetPassword); // ✅ รีเซ็ตรหัสผ่านผ่าน email
 
 module.exports = router;

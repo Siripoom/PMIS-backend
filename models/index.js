@@ -1,41 +1,42 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
+const express = require("express");
+const Sequelize = require("sequelize");
+const config = require("../config/config.json")["development"];
+
+// ✅ เชื่อมต่อกับ PostgreSQL ผ่าน Sequelize
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
+
 const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// ✅ นำเข้าโมเดลทั้งหมด
+db.User = require("./userModel");
+db.Project = require("./projectModel");
+db.Report = require("./reportModel");
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-// 🔹 นำเข้า relation.js และกำหนดความสัมพันธ์
-const defineRelationships = require('./relation');
+// ✅ กำหนดความสัมพันธ์
+const defineRelationships = require("./relation");
 defineRelationships();
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// ✅ ซิงค์ฐานข้อมูลหลังจากกำหนดความสัมพันธ์
+sequelize.sync({ alter: true }).then(() => {
+    console.log("✅ Database schema updated!");
+}).catch((err) => {
+    console.error("❌ Error syncing database:", err);
+});
+
+// ✅ สร้าง Express App
+const app = express();
+app.use(express.json());
+
+// ✅ นำเข้า Routes
+const reportRoutes = require("./routes/reportRoutes");
+app.use("/api/reports", reportRoutes);
+
+// ✅ Start Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
 
 module.exports = db;

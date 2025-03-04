@@ -1,33 +1,45 @@
 const { Sequelize } = require("sequelize"); // ✅ ใช้สำหรับ Query Database
 const Project = require("../models/projectModel");
+const User = require("../models/userModel");
 
 // ✅ Create Project
 const createProject = async (req, res) => {
   try {
-    const { project_name, description, status, budget, start_date } = req.body;
+    const { project_name, description, status, budget, start_date, end_date, username } = req.body;
 
-    // ✅ ตรวจสอบค่าที่จำเป็น
-    if (!project_name || !budget) {
-      return res.status(400).json({ error: "Project name and budget are required" });
+    // ✅ ตรวจสอบว่ามีการส่ง username มาหรือไม่
+    if (!username) {
+      return res.status(400).json({ error: "Username is required" });
     }
 
-    // ✅ ตรวจสอบว่ามี `req.user.id` หรือไม่
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: "Unauthorized: Missing user ID" });
+    // ✅ ค้นหา user_id จาก username ในฐานข้อมูล
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" }); // ❌ ถ้าไม่มี user ห้ามสร้างโครงการ
     }
 
+    const created_by = user.user_id;
+
+    // ✅ สร้างโครงการโดยใช้ user_id ของ username ที่เจอ
     const newProject = await Project.create({
       project_name,
       description,
       status,
       budget,
       start_date: start_date ? new Date(start_date) : new Date(),
-      created_by: req.user.id
+      end_date: end_date ? new Date(end_date) : null,
+      created_by, // ✅ ใช้ user_id ของ username ที่เจอ
     });
 
     res.status(201).json({
       message: "Project created successfully",
-      project: newProject
+      project: newProject,
+      user: {
+        user_id: user.user_id,
+        username: user.username,
+        email: user.email,
+      }, // ✅ คืนค่าข้อมูล user ที่สร้างโครงการกลับไปด้วย
     });
 
   } catch (err) {
@@ -36,11 +48,13 @@ const createProject = async (req, res) => {
   }
 };
 
+
+
 // ✅ Get All Projects
 const getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll();
-    res.status(200).json({ projects });
+    res.status(200).json({ total:projects.length,projects });
   } catch (err) {
     console.error("❌ Error fetching projects:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });

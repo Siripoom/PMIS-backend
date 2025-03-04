@@ -4,7 +4,7 @@ const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", authenticateToken, addProgressUpdate); // ✅ บันทึกความคืบหน้า
-router.get("/:projectId", authenticateToken, getProjectProgress); // ✅ ดึงเปอร์เซ็นต์ความคืบหน้า
+router.post("/",  addProgressUpdate); // ✅ บันทึกความคืบหน้า
+router.get("/:projectId",  getProjectProgress); // ✅ ดึงเปอร์เซ็นต์ความคืบหน้า
 
 module.exports = router;
