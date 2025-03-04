@@ -45,34 +45,36 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
 
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+          return res.status(400).json({ message: "Invalid email or password" });
+      }
 
-    const token = jwt.sign(
-      { id: user.user_id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+      const token = jwt.sign(
+          { id: user.user_id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "1h" }
+      );
 
-    res.json({
-      message: "Login successful",
-      username: user.username,
-      id: user.user_id,
-      email: user.email,
-      role: user.role,
-      token,
-    });
+      res.locals.user = user;  // ✅ เก็บ user ใน res.locals
+      res.json({
+          message: "Login successful",
+          username: user.username,
+          id: user.user_id,
+          email: user.email,
+          role: user.role,
+          token,
+      });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ GET ME (ดึงข้อมูลผู้ใช้จาก Token)
 const getMe = async (req, res) => {

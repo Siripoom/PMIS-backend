@@ -13,6 +13,9 @@ require("./models/ProjectResourceModel");
 require("./models/resourceModel");
 require("./models/userModel");
 require("./models/reportModel");
+require("./models/logModel"); 
+require("./models/budgetModel");
+require("./models/notificationModel");
 
 // ✅ Import Routes
 const authRoutes = require("./routes/authRoutes"); 
