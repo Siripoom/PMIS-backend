@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const Project = sequelize.define("Project", {
   project_id: {
     type: DataTypes.UUID,
-    defaultValue: uuidv4(),
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   project_name: {
@@ -33,7 +33,7 @@ const Project = sequelize.define("Project", {
   },
   created_by: {
     type: DataTypes.UUID,
-    allowNull: false, // ✅ ถ้าไม่ส่ง user_id จะเกิด Error
+    allowNull: true // ✅ ถ้าไม่ส่ง user_id จะเกิด Error
   },
 }, {
   tableName: "projects",

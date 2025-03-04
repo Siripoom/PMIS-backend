@@ -12,6 +12,7 @@ require("./models/progressModel");
 require("./models/ProjectResourceModel");
 require("./models/resourceModel");
 require("./models/userModel");
+require("./models/reportModel");
 
 // ✅ Import Routes
 const authRoutes = require("./routes/authRoutes"); 
@@ -20,6 +21,8 @@ const progressRoutes = require("./routes/progressRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
 const projectResourceRoutes = require("./routes/projectResourceRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +43,8 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/resource", resourceRoutes);
 app.use("/api/projectResourceRoutes", projectResourceRoutes);
 app.use("/api/budget", budgetRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Simple route for testing
 app.get("/", (req, res) => {
