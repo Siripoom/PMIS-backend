@@ -1,6 +1,8 @@
 const Notification = require("../models/notificationModel");
 const User = require("../models/userModel");
 
+//ตรวจสอบสถานะของโครงการ การเพิ่มลบแก้ไขของโครงการก่อนแล้วค่อยส่งข้อความแจ้งเตือน
+
 // ✅ 1. ฟังก์ชันสร้างการแจ้งเตือน (ไม่มีการส่งอีเมล)
 const createNotification = async (req, res) => {
   const { user_id, message } = req.body;
