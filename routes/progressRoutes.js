@@ -5,7 +5,7 @@ const { logAction } = require("../middlewares/logMiddleware");
 
 const router = express.Router();
 
-router.post("/",  logAction("บันทึกความคืบหน้า"),addProgressUpdate); // ✅ บันทึกความคืบหน้า
+router.post("/",  authenticateToken,logAction("บันทึกความคืบหน้า"),addProgressUpdate); // ✅ บันทึกความคืบหน้า
 router.get("/:projectId",  getProjectProgress); // ✅ ดึงเปอร์เซ็นต์ความคืบหน้า
 
 module.exports = router;
