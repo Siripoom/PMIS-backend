@@ -5,10 +5,10 @@ const { logAction } = require("../middlewares/logMiddleware");
 
 const router = express.Router();
 
-// ✅ ให้ `logAction()` ทำงานหลังจาก `addProgressUpdate()`
-router.post("/", authenticateToken, addProgressUpdate, logAction("บันทึกความคืบหน้า")); 
+// ✅ บันทึกความคืบหน้าโครงการ
+router.post("/", authenticateToken, addProgressUpdate, logAction("บันทึกความคืบหน้า"));
 
-// ✅ เพิ่ม `authenticateToken` ใน `getProjectProgress()`
+// ✅ ดึงเปอร์เซ็นต์ความคืบหน้าโครงการ
 router.get("/:projectId", authenticateToken, getProjectProgress, logAction("ดึงเปอร์เซ็นต์ความคืบหน้า"));
 
 module.exports = router;

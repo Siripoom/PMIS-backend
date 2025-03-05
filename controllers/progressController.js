@@ -19,6 +19,15 @@ const addProgressUpdate = async (req, res) => {
       updated_by: req.user.id, // ✅ ดึงจาก Token อัตโนมัติ
     });
 
+    // ✅ ตรวจสอบว่ามีข้อมูลความคืบหน้าซ้ำหรือไม่
+    const existingProgress = await Progress.findOne({
+      where: { project_id, progress },
+    });
+
+    if (existingProgress) {
+      return res.status(400).json({ message: "บันทึกความคืบหน้าแล้ว" });
+    }
+
     // ✅ บันทึก Log การอัปเดตความคืบหน้า
     await createLog(req.user.id, `บันทึกความคืบหน้าโครงการ ${project_id}: ${progress}%`, req);
 
