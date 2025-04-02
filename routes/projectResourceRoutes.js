@@ -1,14 +1,10 @@
 const express = require('express');
-const { trackResourceUsage, getUsageByProject } = require('../controllers/projectResourceController');
-const { authenticateToken } = require("../middlewares/authMiddleware");
-const { logAction } = require("../middlewares/logMiddleware");
+const { trackResourceUsage, getUsageByProject, getAllProjectResources } = require('../controllers/projectResourceController');
 
 const router = express.Router();
 
-// ✅ ให้ `logAction()` ทำงานหลังจาก `trackResourceUsage()`
-router.post('/', authenticateToken, trackResourceUsage, logAction("ติดตามการใช้ทรัพยากรของผู้ใช้"));
-
-// ✅ เพิ่ม `authenticateToken` ใน `getUsageByProject()`
-router.get('/:project_id', authenticateToken, getUsageByProject, logAction("ติดตามทรัพยากรของโปรเจค"));
+router.post('/', trackResourceUsage);
+router.get('/:project_id', getUsageByProject);
+router.get("/", getAllProjectResources); //
 
 module.exports = router;

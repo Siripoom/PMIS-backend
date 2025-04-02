@@ -42,37 +42,37 @@ const register = async (req, res) => {
 
 // LOGIN API
 const login = async (req, res) => {
-  const { email, password } = req.body;
+    const { email, password } = req.body;
 
-  try {
-      const user = await User.findOne({ where: { email } });
-      if (!user) {
-          return res.status(404).json({ message: "User not found" });
-      }
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-          return res.status(400).json({ message: "Invalid email or password" });
-      }
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
 
-      const token = jwt.sign(
-          { id: user.user_id, role: user.role },
-          process.env.JWT_SECRET,
-          { expiresIn: "1h" }
-      );
+        const token = jwt.sign(
+            { id: user.user_id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
 
-      res.locals.user = user;  // ✅ เก็บ user ใน res.locals
-      res.json({
-          message: "Login successful",
-          username: user.username,
-          id: user.user_id,
-          email: user.email,
-          role: user.role,
-          token,
-      });
-  } catch (err) {
-      res.status(500).json({ error: err.message });
-  }
+        res.locals.user = user;  // ✅ เก็บ user ใน res.locals
+        res.json({
+            message: "Login successful",
+            username: user.username,
+            id: user.user_id,
+            email: user.email,
+            role: user.role,
+            token,
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 
@@ -116,4 +116,77 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, resetPassword };
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: { exclude: ["password"] }, // ✅ ซ่อน password
+      order: [["created_at", "DESC"]], // ✅ เรียงตามวันที่สร้าง
+    });
+
+    res.status(200).json({
+      message: "Retrieved all users successfully",
+      data: users,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ อัปเดตข้อมูลผู้ใช้
+const updateUser = async (req, res) => {
+  const { user_id } = req.params;
+  const { username, fullname, email, role, password } = req.body;
+
+  try {
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ อัปเดตเฉพาะข้อมูลที่ส่งมา (ถ้ามี)
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (role) user.role = role;
+
+    // ✅ หากมีการเปลี่ยนรหัสผ่าน ให้เข้ารหัสก่อน
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      data: {
+        id: user.user_id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ ลบผู้ใช้
+const deleteUser = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await user.destroy();
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ Export ฟังก์ชันใหม่
+module.exports = { register, login, getMe, resetPassword, getAllUsers, updateUser, deleteUser };
+

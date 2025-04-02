@@ -17,7 +17,7 @@ const Project = sequelize.define("Project", {
   },
   start_date: {
     type: DataTypes.DATE,
-    allowNull: false, // ✅ ถ้าไม่ส่งมาจะเกิด Error
+    allowNull: true, // ✅ ถ้าไม่ส่งมาจะเกิด Error
     defaultValue: new Date()
   },
   end_date: {
@@ -25,7 +25,7 @@ const Project = sequelize.define("Project", {
   },
   budget: {
     type: DataTypes.DECIMAL(12, 2),
-    allowNull: false, // ✅ ฟิลด์นี้ต้องถูกส่งมา
+    allowNull: true, // ✅ ฟิลด์นี้ต้องถูกส่งมา
   },
   status: {
     type: DataTypes.ENUM("Planned", "In Progress", "Completed", "Delayed"),

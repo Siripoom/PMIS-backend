@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const Budget = sequelize.define("Budget", {
   budget_id: {
     type: DataTypes.UUID,
-    defaultValue: uuidv4(),
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   project_id: {

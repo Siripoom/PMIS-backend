@@ -21,6 +21,8 @@ const Resource = sequelize.define("Resource", {
         type: DataTypes.STRING(50),
         allowNull: false
     },
+
+
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

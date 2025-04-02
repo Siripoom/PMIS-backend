@@ -44,7 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/resource", resourceRoutes);
-app.use("/api/projectResourceRoutes", projectResourceRoutes);
+app.use("/api/projectResource", projectResourceRoutes);
 app.use("/api/budget", budgetRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);

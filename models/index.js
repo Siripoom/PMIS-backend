@@ -13,6 +13,11 @@ const db = {};
 db.User = require("./userModel");
 db.Project = require("./projectModel");
 db.Report = require("./reportModel");
+db.Budget = require("./budgetModel");
+db.Progress = require("./progressModel");
+db.Resource = require("./resourceModel");
+db.ProjectResource = require("./ProjectResourceModel");
+db.Notification = require("./notificationModel");
 
 // ✅ กำหนดความสัมพันธ์
 const defineRelationships = require("./relation");

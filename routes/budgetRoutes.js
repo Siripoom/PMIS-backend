@@ -1,14 +1,17 @@
 const express = require("express");
-const { recordExpense, getBudgetSummary } = require("../controllers/budgetController");
-const { authenticateToken } = require("../middlewares/authMiddleware");
+const { recordExpense, getBudgetSummary, deleteBudget } = require("../controllers/budgetController");
+// 🚫 ลบ middleware `authenticateToken` ชั่วคราว
+// const { authenticateToken } = require("../middlewares/authMiddleware");
 const { logAction } = require("../middlewares/logMiddleware");
 
 const router = express.Router();
 
-// ✅ ให้ `logAction()` ทำงานหลังจาก `recordExpense`
-router.post("/", authenticateToken, recordExpense, logAction("บันทึกค่าใช้จ่าย"));
+// ✅ ลองทดสอบ โดยลบ `authenticateToken` ออก
+router.post("/", /* authenticateToken, */ recordExpense /*logAction("บันทึกค่าใช้จ่าย")*/);
 
-// ✅ ให้ `logAction()` ทำงานหลังจาก `getBudgetSummary`
-router.get("/:project_id", authenticateToken, getBudgetSummary, logAction("ดูสรุปงบประมาณที่ใช้ไป"));
+// ✅ ลบ `authenticateToken` ออก เพื่อดึงข้อมูลงบประมาณโดยไม่ใช้ Token
+router.get("/:project_id", /* authenticateToken, */ getBudgetSummary /*logAction("ดูสรุปงบประมาณที่ใช้ไป")*/);
+
+router.delete("/:budget_id", deleteBudget);
 
 module.exports = router;

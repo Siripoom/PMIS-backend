@@ -1,23 +1,16 @@
 const express = require('express');
-const { register, login, getMe, resetPassword } = require('../controllers/authController'); 
+const { register, login, getMe, resetPassword, getAllUsers, updateUser, deleteUser } = require('../controllers/authController'); // ✅ เพิ่ม updateUser และ deleteUser
 const { authenticateToken } = require("../middlewares/authMiddleware");
-const { logAction } = require("../middlewares/logMiddleware");
 
 const router = express.Router();
 
 router.post('/register', register);
+router.post('/login', login);
+router.get('/me',  authenticateToken,getMe);  //authenticateToken,
+router.post('/reset-password', resetPassword); // ✅ รีเซ็ตรหัสผ่านผ่าน email
+router.get('/users', getAllUsers); // ❌ ลบ authenticateToken ออก
+router.put('/users/:user_id', updateUser);
+router.delete('/users/:user_id', deleteUser);
 
-// ✅ แก้ไข /login ให้ `logAction()` ทำงานหลังจาก `login()`
-router.post('/login', async (req, res, next) => {
-    await login(req, res);  // ✅ login ทำงานก่อน
-    if (res.locals.user) {  // ✅ ตรวจสอบว่ามี user หลัง login สำเร็จ
-        req.user = res.locals.user;  // ✅ ส่งข้อมูล user ไปยัง logAction
-        next();
-    }
-}, logAction("User Logged In"));
-
-router.get('/me', authenticateToken, getMe, logAction("User Accessed Profile"));
-
-router.post('/reset-password', authenticateToken, resetPassword, logAction("User Reset Password")); 
 
 module.exports = router;
