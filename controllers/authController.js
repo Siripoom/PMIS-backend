@@ -1,7 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+const Notification = require("../models/notificationModel");  // เพิ่มการ import Notification model
 const { v4: uuidv4 } = require("uuid");
+
+
 
 require("dotenv").config();
 
@@ -132,6 +135,33 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// ✅ ฟังก์ชันดึงข้อมูลผู้ใช้จาก user_id
+const getUserByUsername = async (req, res) => {
+  const { username } = req.params;  // รับค่า username จาก params
+
+  try {
+    // ดึงข้อมูลผู้ใช้จากฐานข้อมูลตาม username
+    const user = await User.findOne({
+      where: { username },  // ค้นหาผู้ใช้โดยใช้ username
+      attributes: { exclude: ["password"] },  // ซ่อนรหัสผ่าน
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ส่งข้อมูลผู้ใช้กลับ
+    res.status(200).json({
+      message: "User data retrieved successfully",
+      data: user,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
 // ✅ อัปเดตข้อมูลผู้ใช้
 const updateUser = async (req, res) => {
   const { user_id } = req.params;
@@ -180,13 +210,20 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // ลบข้อมูลที่เกี่ยวข้องใน Notification
+    await Notification.destroy({ where: { user_id } });
+
+    // ลบผู้ใช้
     await user.destroy();
+
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+
+
 // ✅ Export ฟังก์ชันใหม่
-module.exports = { register, login, getMe, resetPassword, getAllUsers, updateUser, deleteUser };
+module.exports = { register, login, getMe, resetPassword, getAllUsers, updateUser, deleteUser ,getUserByUsername };
 

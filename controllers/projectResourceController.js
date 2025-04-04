@@ -3,6 +3,9 @@ const { sendAutoNotification } = require("../controllers/notificationController"
 const ProjectResource = require("../models/ProjectResourceModel");
 const Resource = require("../models/resourceModel");
 const Project = require("../models/projectModel");
+const User = require("../models/userModel");  // เพิ่มการ import User model
+const { Op } = require("sequelize");
+
 
 // ฟังก์ชันในการติดตามการใช้ทรัพยากร
 const trackResourceUsage = async (req, res) => {
@@ -92,24 +95,86 @@ const getUsageByProject = async (req, res) => {
 // ฟังก์ชันดึงข้อมูลทั้งหมดจาก ProjectResource พร้อมข้อมูลที่เชื่อมโยงจาก Resource และ Project
 const getAllProjectResources = async (req, res) => {
     try {
-        // รับค่า limit และ offset จาก query สำหรับ pagination
         const { limit = 10, offset = 0 } = req.query;
 
         const projectResources = await ProjectResource.findAll({
-            
-            limit: parseInt(limit),  // กำหนดการจำกัดจำนวนข้อมูล
-            offset: parseInt(offset) // กำหนดค่า offset สำหรับ Pagination
+            limit: parseInt(limit),
+            offset: parseInt(offset)
         });
 
         if (!projectResources || projectResources.length === 0) {
-            return res.status(404).json({ message: "No project resources found" });
+            return res.status(404).json({ message: "ไม่พบรายการการใช้ทรัพยากรในโครงการ" });
         }
 
-        res.status(200).json(projectResources);
+        // map เพื่อดึง project_name, resource_name, unit และ allocated_by (ชื่อผู้ใช้)
+        const enrichedResources = await Promise.all(projectResources.map(async (pr) => {
+            // ✅ ดึงชื่อโครงการ
+            const project = await Project.findByPk(pr.project_id);
+            const project_name = project ? project.project_name : "ไม่พบชื่อโครงการ";
+
+            // ✅ ดึงชื่อผู้ใช้จาก allocated_by
+            const allocatedByUser = await User.findByPk(pr.allocated_by);
+            const allocated_by_name = allocatedByUser ? allocatedByUser.username : "ไม่พบผู้จัดสรร";
+
+            // ✅ ดึงชื่อทรัพยากรและ unit จาก resource array
+            const enrichedResourceList = await Promise.all(pr.resource.map(async (resItem) => {
+                const resource = await Resource.findByPk(resItem.resource_id);
+
+                const resource_name = resource ? resource.resource_name : "ไม่พบชื่อทรัพยากร";
+                const unit = resource ? resource.unit : "-";
+
+                return {
+                    ...resItem,
+                    resource_name,
+                    unit
+                };
+            }));
+
+            return {
+                id: pr.id,
+                project_id: pr.project_id,
+                project_name,
+                resource: enrichedResourceList,
+                allocated_by: allocated_by_name, // เปลี่ยนจาก user_id เป็น ชื่อผู้ใช้
+                allocated_at: pr.allocated_at
+            };
+        }));
+
+        res.status(200).json(enrichedResources);
     } catch (error) {
-        console.error("❌ Error fetching all project resources:", error);
+        console.error("❌ Error fetching enriched project resources:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
-module.exports = { trackResourceUsage, getUsageByProject, sendAutoNotification, getAllProjectResources };
+// ฟังก์ชันในการลบข้อมูลใน ProjectResource ตาม project_id หรือ resource_id
+const deleteProjectResource = async (req, res) => {
+    const { project_id, resource_id } = req.params;
+
+    try {
+        const projectResource = await ProjectResource.findOne({
+            where: { project_id },
+        });
+
+        if (!projectResource) {
+            return res.status(404).json({ message: "ไม่พบโปรเจกต์ที่ต้องการลบ" });
+        }
+
+        // ลบ resource_id ออกจาก array resource
+        const updatedResources = projectResource.resource.filter(
+            (resItem) => resItem.resource_id !== resource_id
+        );
+
+        // อัปเดตข้อมูลใน ProjectResource
+        projectResource.resource = updatedResources;
+        await projectResource.save();
+
+        res.status(200).json({ message: "ลบทรัพยากรจากโปรเจกต์สำเร็จ" });
+    } catch (error) {
+        console.error("❌ Error deleting project resource:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+module.exports = { trackResourceUsage, getUsageByProject, sendAutoNotification, getAllProjectResources ,deleteProjectResource };
