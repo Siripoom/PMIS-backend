@@ -10,53 +10,70 @@ const { Op } = require("sequelize");
 // ฟังก์ชันในการติดตามการใช้ทรัพยากร
 const trackResourceUsage = async (req, res) => {
     try {
-        const { project_id, resource_name, used_quantity, allocated_by } = req.body;
-
-        // ตรวจสอบค่าที่ได้รับจาก frontend
-        if (!project_id || !resource_name || !used_quantity || !allocated_by) {
-            return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบทุกช่อง" });
-        }
-
-        // ตรวจสอบว่า used_quantity เป็นตัวเลขที่มากกว่าศูนย์
-        if (used_quantity <= 0) {
-            return res.status(400).json({ message: "Used quantity must be greater than 0" });
-        }
-
-        // ค้นหา resource_id จาก resource_name
-        const resource = await Resource.findOne({ where: { resource_name } });
-        if (!resource) {
-            return res.status(404).json({ message: `ไม่พบทรัพยากรชื่อ '${resource_name}'` });
-        }
-
-        const resource_id = resource.resource_id;
-        const allocation = { resource_id, used_quantity, allocated_at: new Date() };
-
-        // ค้นหาว่ามี record สำหรับ project_id นี้อยู่หรือไม่
-        let projectResource = await ProjectResource.findOne({ where: { project_id } });
-
-        if (projectResource) {
-            // ถ้ามี project_id อยู่แล้วให้เพิ่ม resource เข้าไปใน array
-            let updatedResources = [...projectResource.resource, allocation];
-            projectResource.resource = updatedResources;
-            await projectResource.save();
-        } else {
-            // ถ้าไม่มี record ให้สร้างใหม่
-            projectResource = await ProjectResource.create({
-                project_id,
-                resource: [allocation], // ✅ บันทึกเป็น Array
-                allocated_by,
-                allocated_at: new Date(),
-            });
-        }
-
-        res.status(201).json({ message: "บันทึกการใช้งานทรัพยากรสำเร็จ", data: projectResource });
+      const { project_id, resource_name, used_quantity, allocated_by } = req.body;
+  
+      if (!project_id || !resource_name || !used_quantity || !allocated_by) {
+        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบทุกช่อง" });
+      }
+  
+      if (used_quantity <= 0) {
+        return res.status(400).json({ message: "Used quantity must be greater than 0" });
+      }
+  
+      console.log("🔍 allocated_by:", allocated_by);
+      
+      const user = await User.findOne({ where: { username: allocated_by } });
+      console.log("🧑‍💻 Fetched User:", user);
+  
+      if (!user) {
+        return res.status(404).json({ message: `ไม่พบผู้ใช้งานชื่อ '${allocated_by}'` });
+      }
+      const allocated_by_id = user.user_id;
+  
+      const resource = await Resource.findOne({ where: { resource_name } });
+      if (!resource) {
+        return res.status(404).json({ message: `ไม่พบทรัพยากรชื่อ '${resource_name}'` });
+      }
+  
+      const resource_id = resource.resource_id;
+      const allocation = {
+        resource_id,
+        used_quantity,
+        allocated_at: new Date()
+      };
+  
+      let projectResource = await ProjectResource.findOne({ where: { project_id } });
+  
+      if (projectResource) {
+        projectResource.resource = [...projectResource.resource, allocation];
+        await projectResource.save();
+      } else {
+        projectResource = await ProjectResource.create({
+          project_id,
+          resource: [allocation],
+          used_quantity, // ✅ เพิ่มตรงนี้
+          allocated_by: allocated_by_id,
+          allocated_at: new Date()
+        });
+      }
+  
+      const responsePayload = {
+        ...projectResource.toJSON(),
+        allocated_by: user.username
+      };
+  
+      res.status(201).json({
+        message: "บันทึกการใช้งานทรัพยากรสำเร็จ",
+        data: responsePayload
+      });
+  
     } catch (error) {
-        console.error("❌ Error:", error);
-        res.status(500).json({ error: error.message });
+      console.error("❌ Error:", error);
+      res.status(500).json({ error: error.message });
     }
-};
-
-
+  };
+  
+  
 
 // ฟังก์ชันดึงข้อมูลการใช้ทรัพยากรของโครงการตาม project_id
 const getUsageByProject = async (req, res) => {
@@ -95,57 +112,67 @@ const getUsageByProject = async (req, res) => {
 // ฟังก์ชันดึงข้อมูลทั้งหมดจาก ProjectResource พร้อมข้อมูลที่เชื่อมโยงจาก Resource และ Project
 const getAllProjectResources = async (req, res) => {
     try {
-        const { limit = 10, offset = 0 } = req.query;
+      const { limit = 10, offset = 0 } = req.query;
+  
+      const projectResources = await ProjectResource.findAll({
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+  
+      if (!projectResources || projectResources.length === 0) {
+        return res.status(404).json({ message: "ไม่พบรายการการใช้ทรัพยากรในโครงการ" });
+      }
+  
+      const enrichedResources = await Promise.all(
+        projectResources.map(async (pr) => {
+            console.log("📌 project_id:", pr.project_id);
+            console.log("👤 allocated_by user_id:", pr.allocated_by);
+          // 🔍 ดึงข้อมูลโครงการ
+          const project = await Project.findByPk(pr.project_id);
+          const project_name = project ? project.project_name : "ไม่พบชื่อโครงการ";
+      
+          // 🔍 ดึงชื่อผู้ใช้จาก user_id
+          const user = await User.findOne({ where: { user_id: pr.allocated_by } });
+          const allocated_by_name = user ? user.username : "ไม่พบผู้ใช้";
+          console.log("🧪 user_id ที่ค้นหา:", pr.allocated_by);
+console.log("🔍 User ที่พบ:", user ? user.username : "ไม่พบ");
 
-        const projectResources = await ProjectResource.findAll({
-            limit: parseInt(limit),
-            offset: parseInt(offset)
-        });
-
-        if (!projectResources || projectResources.length === 0) {
-            return res.status(404).json({ message: "ไม่พบรายการการใช้ทรัพยากรในโครงการ" });
-        }
-
-        // map เพื่อดึง project_name, resource_name, unit และ allocated_by (ชื่อผู้ใช้)
-        const enrichedResources = await Promise.all(projectResources.map(async (pr) => {
-            // ✅ ดึงชื่อโครงการ
-            const project = await Project.findByPk(pr.project_id);
-            const project_name = project ? project.project_name : "ไม่พบชื่อโครงการ";
-
-            // ✅ ดึงชื่อผู้ใช้จาก allocated_by
-            const allocatedByUser = await User.findByPk(pr.allocated_by);
-            const allocated_by_name = allocatedByUser ? allocatedByUser.username : "ไม่พบผู้จัดสรร";
-
-            // ✅ ดึงชื่อทรัพยากรและ unit จาก resource array
-            const enrichedResourceList = await Promise.all(pr.resource.map(async (resItem) => {
-                const resource = await Resource.findByPk(resItem.resource_id);
-
-                const resource_name = resource ? resource.resource_name : "ไม่พบชื่อทรัพยากร";
-                const unit = resource ? resource.unit : "-";
-
-                return {
-                    ...resItem,
-                    resource_name,
-                    unit
-                };
-            }));
-
-            return {
-                id: pr.id,
-                project_id: pr.project_id,
-                project_name,
-                resource: enrichedResourceList,
-                allocated_by: allocated_by_name, // เปลี่ยนจาก user_id เป็น ชื่อผู้ใช้
-                allocated_at: pr.allocated_at
-            };
-        }));
-
-        res.status(200).json(enrichedResources);
+          console.log("📌 project_id:", pr.project_id);
+console.log("👤 allocated_by user_id:", pr.allocated_by);
+console.log("🧑‍💻 allocated_by name:", allocated_by_name);
+      
+          // 🔍 ดึงชื่อทรัพยากร + unit
+          const enrichedResourceList = await Promise.all(
+            pr.resource.map(async (resItem) => {
+              const resource = await Resource.findByPk(resItem.resource_id);
+              return {
+                ...resItem,
+                resource_name: resource ? resource.resource_name : "ไม่พบชื่อทรัพยากร",
+                unit: resource ? resource.unit : "-",
+              };
+            })
+          );
+      
+          return {
+            id: pr.id,
+            project_id: pr.project_id,
+            project_name,
+            resource: enrichedResourceList,
+            allocated_by: allocated_by_name,  // 🔁 แสดงชื่อแทน ID
+            allocated_at: pr.allocated_at,
+          };
+        })
+      );
+      
+  
+      res.status(200).json(enrichedResources);
     } catch (error) {
-        console.error("❌ Error fetching enriched project resources:", error);
-        res.status(500).json({ error: error.message });
+      console.error("❌ Error fetching enriched project resources:", error);
+      res.status(500).json({ error: error.message });
     }
-};
+  };
+  
+ 
 
 // ฟังก์ชันในการลบข้อมูลใน ProjectResource ตาม project_id หรือ resource_id
 const deleteProjectResource = async (req, res) => {
