@@ -13,6 +13,13 @@ require("./models/ProjectResourceModel");
 require("./models/resourceModel");
 require("./models/userModel");
 require("./models/reportModel");
+require("./models/logModel"); 
+require("./models/budgetModel");
+require("./models/notificationModel");
+
+// ✅ เรียกฟังก์ชันกำหนดความสัมพันธ์
+const defineRelationships = require("./models/relation");
+defineRelationships();
 
 // ✅ Import Routes
 const authRoutes = require("./routes/authRoutes"); 
@@ -41,7 +48,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/resource", resourceRoutes);
-app.use("/api/projectResourceRoutes", projectResourceRoutes);
+app.use("/api/projectResource", projectResourceRoutes);
 app.use("/api/budget", budgetRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);

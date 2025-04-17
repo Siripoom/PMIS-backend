@@ -26,7 +26,7 @@ const Progress = sequelize.define("Progress", {
   },
   updated_by: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,
   },
 }, {
   tableName: "progress",

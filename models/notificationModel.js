@@ -4,15 +4,16 @@ const User = require("./userModel");
 
 const Notification = sequelize.define(
   "Notification",
-  {
-    notification_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
+  
+    {
+      notification_id: {
+        type: DataTypes.UUID, // ✅ ใช้ UUID v4 แทน INTEGER
+        defaultValue: DataTypes.UUIDV4, // ✅ ให้ Sequelize กำหนดค่า UUID v4 อัตโนมัติ
+        primaryKey: true,
+      },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: User,
         key: "user_id",

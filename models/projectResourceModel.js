@@ -1,21 +1,25 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/dbConfig");
-const { v4: uuidv4 } = require("uuid");
 
 const ProjectResource = sequelize.define("ProjectResource", {
     id: {
         type: DataTypes.UUID,
         primaryKey: true,
-        defaultValue: uuidv4(),
+        defaultValue: DataTypes.UUIDV4,
         allowNull: false
     },
     project_id: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+            model: "projects",
+            key: "project_id"
+        }
     },
-    resource_id: {
-        type: DataTypes.UUID,
+    resource: { 
+        type: DataTypes.JSONB,  // ✅ เปลี่ยนจาก resource_id เป็น JSONB Array
         allowNull: false,
+        defaultValue: []
     },
     used_quantity: {
         type: DataTypes.INTEGER,

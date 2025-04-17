@@ -9,13 +9,14 @@ const Report = require("../models/reportModel");
 
 const generateReport = async (req, res) => {
   const { project_id, format } = req.body;
-  const user_id = req.user ? req.user.id : "test_user"; // ✅ ป้องกัน req.user เป็น undefined
+  const user_id = req.user ? req.user.id : "Admin"; // ✅ ป้องกัน req.user เป็น undefined
 
   try {
     // ตรวจสอบว่าโครงการมีอยู่จริง
     const project = await Project.findByPk(project_id, {
-      include: [{ model: User, as: "creator" }, { model: Progress }],
+      include: [{ model: User }, { model: Progress }], // ❌ เอา as: "creator" ออก
     });
+    
 
     if (!project) {
       return res.status(404).json({ error: "Project not found" });

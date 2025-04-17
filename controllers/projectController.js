@@ -1,6 +1,9 @@
 const { Sequelize } = require("sequelize"); // ✅ ใช้สำหรับ Query Database
+const { sendAutoNotification } = require("../controllers/notificationController");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
+const ProjectResource = require("../models/ProjectResourceModel"); // ✅ ใช้สำหรับการจัดการทรัพยากรของโครงการ
+
 
 // ✅ Create Project
 const createProject = async (req, res) => {
@@ -12,25 +15,46 @@ const createProject = async (req, res) => {
       return res.status(400).json({ error: "Username is required" });
     }
 
-    // ✅ ค้นหา user_id จาก username ในฐานข้อมูล
+    // ✅ ค้นหา user_id จาก username
     const user = await User.findOne({ where: { username } });
-
     if (!user) {
-      return res.status(404).json({ error: "User not found" }); // ❌ ถ้าไม่มี user ห้ามสร้างโครงการ
+      return res.status(404).json({ error: "User not found" });
     }
 
-    const created_by = user.user_id;
+    // ✅ ตรวจสอบว่าชื่อโครงการนี้มีอยู่แล้วหรือไม่
+    const existingProject = await Project.findOne({ where: { project_name } });
+    if (existingProject) {
+      return res.status(400).json({ error: "Project with this name already exists" });
+    }
 
-    // ✅ สร้างโครงการโดยใช้ user_id ของ username ที่เจอ
+    // ✅ ตรวจสอบค่า budget
+    const parsedBudget = Number(budget);
+    if (isNaN(parsedBudget) || parsedBudget < 0) {
+      return res.status(400).json({ error: "Invalid budget amount" });
+    }
+
     const newProject = await Project.create({
       project_name,
       description,
       status,
-      budget,
+      budget: parsedBudget,
       start_date: start_date ? new Date(start_date) : new Date(),
       end_date: end_date ? new Date(end_date) : null,
-      created_by, // ✅ ใช้ user_id ของ username ที่เจอ
+      created_by: user.user_id, // ✅ ใช้ user_id ของ username ที่เจอ
     });
+
+    // ✅ ส่งการแจ้งเตือน
+    sendAutoNotification(
+      user.user_id,
+      "โครงการใหม่ถูกสร้างขึ้น",
+      `คุณได้สร้างโครงการ "${project_name}" สำเร็จแล้ว`,
+      "info",
+      `/projects/${newProject.project_id}`,
+      "🚀"
+    );
+
+    // ✅ บันทึก Log ว่ามีการสร้างโครงการ
+    /*await createLog(user.user_id, `สร้างโครงการใหม่: ${project_name}`, req);*/
 
     res.status(201).json({
       message: "Project created successfully",
@@ -39,7 +63,7 @@ const createProject = async (req, res) => {
         user_id: user.user_id,
         username: user.username,
         email: user.email,
-      }, // ✅ คืนค่าข้อมูล user ที่สร้างโครงการกลับไปด้วย
+      },
     });
 
   } catch (err) {
@@ -107,7 +131,12 @@ const deleteProject = async (req, res) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
+    // ✅ ลบ resource ที่เชื่อมกับ project ก่อน
+    await ProjectResource.destroy({ where: { project_id: req.params.id } });
+
+    // ✅ จากนั้นค่อยลบ project
     await project.destroy();
+
     res.status(200).json({ message: "Project deleted successfully" });
 
   } catch (err) {
