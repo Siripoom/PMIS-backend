@@ -75,6 +75,35 @@ exports.recordExpense = async (req, res) => {
   }
 };
 
+// ✅ ดึงงบประมาณทั้งหมดในระบบ
+exports.getAllBudgets = async (req, res) => {
+  try {
+    const allBudgets = await Budget.findAll({
+      include: [
+        {
+          model: Project,
+          attributes: ["project_id", "project_name"],
+        },
+      ],
+      order: [["spent_at", "DESC"]],
+    });
+
+    // ✅ บันทึก Log การเข้าถึงข้อมูล
+    if (req.user && req.user.id) {
+      await createLog(req.user.id, "ดูรายการงบประมาณทั้งหมด", req);
+    }
+
+    res.status(200).json({
+      message: "ดึงข้อมูลงบประมาณทั้งหมดสำเร็จ",
+      data: allBudgets,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching all budgets:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 // ✅ สรุปงบประมาณที่ใช้ไป
 exports.getBudgetSummary = async (req, res) => {
   try {

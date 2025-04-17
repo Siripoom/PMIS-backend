@@ -17,6 +17,10 @@ require("./models/logModel");
 require("./models/budgetModel");
 require("./models/notificationModel");
 
+// ✅ เรียกฟังก์ชันกำหนดความสัมพันธ์
+const defineRelationships = require("./models/relation");
+defineRelationships();
+
 // ✅ Import Routes
 const authRoutes = require("./routes/authRoutes"); 
 const projectRoutes = require("./routes/projectRoutes");

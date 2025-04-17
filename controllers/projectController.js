@@ -2,6 +2,7 @@ const { Sequelize } = require("sequelize"); // ✅ ใช้สำหรับ Q
 const { sendAutoNotification } = require("../controllers/notificationController");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
+const ProjectResource = require("../models/ProjectResourceModel"); // ✅ ใช้สำหรับการจัดการทรัพยากรของโครงการ
 
 
 // ✅ Create Project
@@ -130,7 +131,12 @@ const deleteProject = async (req, res) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
+    // ✅ ลบ resource ที่เชื่อมกับ project ก่อน
+    await ProjectResource.destroy({ where: { project_id: req.params.id } });
+
+    // ✅ จากนั้นค่อยลบ project
     await project.destroy();
+
     res.status(200).json({ message: "Project deleted successfully" });
 
   } catch (err) {

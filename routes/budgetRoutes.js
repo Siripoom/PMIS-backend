@@ -1,17 +1,30 @@
 const express = require("express");
-const { recordExpense, getBudgetSummary, deleteBudget } = require("../controllers/budgetController");
-// 🚫 ลบ middleware `authenticateToken` ชั่วคราว
-// const { authenticateToken } = require("../middlewares/authMiddleware");
+const budgetController = require("../controllers/budgetController");
+// const { authenticateToken } = require("../middlewares/authMiddleware"); // ปิดไว้ชั่วคราวหากไม่ใช้ auth
 const { logAction } = require("../middlewares/logMiddleware");
 
 const router = express.Router();
 
-// ✅ ลองทดสอบ โดยลบ `authenticateToken` ออก
-router.post("/", /* authenticateToken, */ recordExpense /*logAction("บันทึกค่าใช้จ่าย")*/);
+// ✅ บันทึกการใช้จ่าย (POST)
+router.post(
+  "/",
+  // authenticateToken,
+  budgetController.recordExpense
+  // logAction("บันทึกค่าใช้จ่าย")
+);
 
-// ✅ ลบ `authenticateToken` ออก เพื่อดึงข้อมูลงบประมาณโดยไม่ใช้ Token
-router.get("/:project_id", /* authenticateToken, */ getBudgetSummary /*logAction("ดูสรุปงบประมาณที่ใช้ไป")*/);
+// ✅ ดึงงบประมาณทั้งหมด (GET /api/budget)
+router.get("/", budgetController.getAllBudgets);
 
-router.delete("/:budget_id", deleteBudget);
+// ✅ ดึงสรุปงบประมาณโครงการ (GET /api/budget/:project_id)
+router.get(
+  "/:project_id",
+  // authenticateToken,
+  budgetController.getBudgetSummary
+  // logAction("ดูสรุปงบประมาณที่ใช้ไป")
+);
+
+// ✅ ลบงบประมาณ (DELETE /api/budget/:budget_id)
+router.delete("/:budget_id", budgetController.deleteBudget);
 
 module.exports = router;

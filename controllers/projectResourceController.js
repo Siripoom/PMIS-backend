@@ -9,69 +9,76 @@ const { Op } = require("sequelize");
 
 // ฟังก์ชันในการติดตามการใช้ทรัพยากร
 const trackResourceUsage = async (req, res) => {
-    try {
-      const { project_id, resource_name, used_quantity, allocated_by } = req.body;
-  
-      if (!project_id || !resource_name || !used_quantity || !allocated_by) {
-        return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบทุกช่อง" });
-      }
-  
-      if (used_quantity <= 0) {
-        return res.status(400).json({ message: "Used quantity must be greater than 0" });
-      }
-  
-      console.log("🔍 allocated_by:", allocated_by);
-      
-      const user = await User.findOne({ where: { username: allocated_by } });
-      console.log("🧑‍💻 Fetched User:", user);
-  
-      if (!user) {
-        return res.status(404).json({ message: `ไม่พบผู้ใช้งานชื่อ '${allocated_by}'` });
-      }
-      const allocated_by_id = user.user_id;
-  
-      const resource = await Resource.findOne({ where: { resource_name } });
-      if (!resource) {
-        return res.status(404).json({ message: `ไม่พบทรัพยากรชื่อ '${resource_name}'` });
-      }
-  
-      const resource_id = resource.resource_id;
-      const allocation = {
-        resource_id,
-        used_quantity,
-        allocated_at: new Date()
-      };
-  
-      let projectResource = await ProjectResource.findOne({ where: { project_id } });
-  
-      if (projectResource) {
-        projectResource.resource = [...projectResource.resource, allocation];
-        await projectResource.save();
-      } else {
-        projectResource = await ProjectResource.create({
-          project_id,
-          resource: [allocation],
-          used_quantity, // ✅ เพิ่มตรงนี้
-          allocated_by: allocated_by_id,
-          allocated_at: new Date()
-        });
-      }
-  
-      const responsePayload = {
-        ...projectResource.toJSON(),
-        allocated_by: user.username
-      };
-  
-      res.status(201).json({
-        message: "บันทึกการใช้งานทรัพยากรสำเร็จ",
-        data: responsePayload
-      });
-  
-    } catch (error) {
-      console.error("❌ Error:", error);
-      res.status(500).json({ error: error.message });
+  try {
+    const { project_name, resource_name, used_quantity, allocated_by } = req.body;
+
+    if (!project_name || !resource_name || !used_quantity || !allocated_by) {
+      return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบทุกช่อง" });
     }
-  };
+
+    if (used_quantity <= 0) {
+      return res.status(400).json({ message: "Used quantity must be greater than 0" });
+    }
+
+    console.log("🔍 allocated_by:", allocated_by);
+    
+    const user = await User.findOne({ where: { username: allocated_by } });
+    console.log("🧑‍💻 Fetched User:", user);
+
+    if (!user) {
+      return res.status(404).json({ message: `ไม่พบผู้ใช้งานชื่อ '${allocated_by}'` });
+    }
+    const allocated_by_id = user.user_id;
+
+    const resource = await Resource.findOne({ where: { resource_name } });
+    if (!resource) {
+      return res.status(404).json({ message: `ไม่พบทรัพยากรชื่อ '${resource_name}'` });
+    }
+
+    const project = await Project.findOne({ where: { project_name } });
+    if (!project) {
+      return res.status(404).json({ message: `ไม่พบโครงการชื่อ '${project_name}'` });
+    }
+
+    const resource_id = resource.resource_id;
+    const allocation = {
+      resource_id,
+      used_quantity,
+      allocated_at: new Date()
+    };
+
+    let projectResource = await ProjectResource.findOne({ where: { project_id: project.project_id } });
+
+    if (projectResource) {
+      projectResource.resource = [...projectResource.resource, allocation];
+      await projectResource.save();
+    } else {
+      projectResource = await ProjectResource.create({
+        project_id: project.project_id,
+        resource: [allocation],
+        used_quantity,
+        allocated_by: allocated_by_id,
+        allocated_at: new Date()
+      });
+    }
+
+    const responsePayload = {
+      ...projectResource.toJSON(),
+      allocated_by: user.username,
+      project_name: project.project_name // Add project_name to the response
+    };
+
+    res.status(201).json({
+      message: "บันทึกการใช้งานทรัพยากรสำเร็จ",
+      data: responsePayload
+    });
+
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
   
   
 
