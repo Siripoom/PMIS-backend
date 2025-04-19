@@ -31,14 +31,20 @@ const budgetRoutes = require("./routes/budgetRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 
-// Load environment variables
-dotenv.config();
-
 // Create an Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Configure CORS for production
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 // ✅ Middleware
 app.use(express.json());
@@ -55,18 +61,35 @@ app.use("/api/notifications", notificationRoutes);
 
 // Simple route for testing
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the Production System API" });
+  res.status(200).json({
+    message: "Welcome to the Production System API",
+    environment: process.env.NODE_ENV || "development",
+    version: "1.0.0",
+  });
+});
+
+// Health check endpoint for Railway
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
 });
 
 // ✅ Sync Database และรันเซิร์ฟเวอร์
+const syncOptions =
+  process.env.NODE_ENV === "production" ? {} : { alter: true };
+
 sequelize
-  .sync({ alter: true })
+  .sync(syncOptions)
   .then(() => {
     console.log("✅ Database synchronized...");
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
     console.error("❌ Unable to sync database:", err.message);
   });
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});

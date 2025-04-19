@@ -1,21 +1,24 @@
-# ใช้ Node.js เวอร์ชัน 18 บน Alpine (ขนาดเล็กกว่า ลดการใช้ RAM)
+# Use Node.js 18 on Alpine (smaller, optimized for container environments)
 FROM node:18-alpine
 
-# ติดตั้ง netcat สำหรับ Alpine
-RUN apk add --no-cache netcat-openbsd
-
-# ตั้งค่า Working Directory
+# Set working directory
 WORKDIR /app
 
-# คัดลอก package.json และติดตั้ง dependencies
+# Copy package files first (for better caching)
 COPY package*.json ./
-RUN yarn install --production
 
-# คัดลอกไฟล์โค้ดทั้งหมด
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy application code
 COPY . .
 
-# เปิดพอร์ต
+# Create a directory for reports
+RUN mkdir -p reports
+RUN chmod 777 reports
+
+# Expose the application port
 EXPOSE 3000
 
-# Start the app
+# Start the application
 CMD ["npm", "start"]
