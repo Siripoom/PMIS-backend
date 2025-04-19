@@ -9,11 +9,11 @@ dotenv.config();
 // ✅ Import Models ที่นี่เพื่อให้ Sequelize โหลดก่อน sync
 require("./models/projectModel");
 require("./models/progressModel");
-require("./models/ProjectResourceModel");
+require("./models/projectResourceModel");
 require("./models/resourceModel");
 require("./models/userModel");
 require("./models/reportModel");
-require("./models/logModel"); 
+require("./models/logModel");
 require("./models/budgetModel");
 require("./models/notificationModel");
 
@@ -22,7 +22,7 @@ const defineRelationships = require("./models/relation");
 defineRelationships();
 
 // ✅ Import Routes
-const authRoutes = require("./routes/authRoutes"); 
+const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const progressRoutes = require("./routes/progressRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 // ✅ Middleware
-app.use(express.json()); 
+app.use(express.json());
 
 // ✅ Routes
 app.use("/api/auth", authRoutes);

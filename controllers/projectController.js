@@ -1,14 +1,23 @@
 const { Sequelize } = require("sequelize"); // ✅ ใช้สำหรับ Query Database
-const { sendAutoNotification } = require("../controllers/notificationController");
+const {
+  sendAutoNotification,
+} = require("../controllers/notificationController");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
-const ProjectResource = require("../models/ProjectResourceModel"); // ✅ ใช้สำหรับการจัดการทรัพยากรของโครงการ
-
+const ProjectResource = require("../models/projectResourceModel"); // ✅ ใช้สำหรับการจัดการทรัพยากรของโครงการ
 
 // ✅ Create Project
 const createProject = async (req, res) => {
   try {
-    const { project_name, description, status, budget, start_date, end_date, username } = req.body;
+    const {
+      project_name,
+      description,
+      status,
+      budget,
+      start_date,
+      end_date,
+      username,
+    } = req.body;
 
     // ✅ ตรวจสอบว่ามีการส่ง username มาหรือไม่
     if (!username) {
@@ -24,7 +33,9 @@ const createProject = async (req, res) => {
     // ✅ ตรวจสอบว่าชื่อโครงการนี้มีอยู่แล้วหรือไม่
     const existingProject = await Project.findOne({ where: { project_name } });
     if (existingProject) {
-      return res.status(400).json({ error: "Project with this name already exists" });
+      return res
+        .status(400)
+        .json({ error: "Project with this name already exists" });
     }
 
     // ✅ ตรวจสอบค่า budget
@@ -65,20 +76,17 @@ const createProject = async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (err) {
     console.error("❌ Error creating project:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
-
-
 // ✅ Get All Projects
 const getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll();
-    res.status(200).json({ total:projects.length,projects });
+    res.status(200).json({ total: projects.length, projects });
   } catch (err) {
     console.error("❌ Error fetching projects:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
@@ -106,7 +114,9 @@ const updateProject = async (req, res) => {
 
     // ✅ ป้องกันค่าว่าง
     if (project_name === "" || budget === "") {
-      return res.status(400).json({ error: "Project name and budget cannot be empty" });
+      return res
+        .status(400)
+        .json({ error: "Project name and budget cannot be empty" });
     }
 
     const project = await Project.findByPk(req.params.id);
@@ -116,7 +126,6 @@ const updateProject = async (req, res) => {
 
     await project.update(req.body);
     res.status(200).json({ message: "Project updated successfully", project });
-
   } catch (err) {
     console.error("❌ Error updating project:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
@@ -138,11 +147,16 @@ const deleteProject = async (req, res) => {
     await project.destroy();
 
     res.status(200).json({ message: "Project deleted successfully" });
-
   } catch (err) {
     console.error("❌ Error deleting project:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 
-module.exports = { createProject, getAllProjects, getProjectById, updateProject, deleteProject };
+module.exports = {
+  createProject,
+  getAllProjects,
+  getProjectById,
+  updateProject,
+  deleteProject,
+};
