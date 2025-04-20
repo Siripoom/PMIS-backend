@@ -78,15 +78,49 @@ exports.recordExpense = async (req, res) => {
 // ✅ ดึงงบประมาณทั้งหมดในระบบ
 exports.getAllBudgets = async (req, res) => {
   try {
-    const allBudgets = await Budget.findAll({
-      include: [
-        {
-          model: Project,
-          attributes: ["project_id", "project_name"],
-        },
-      ],
-      order: [["spent_at", "DESC"]],
-    });
+    const { role, user_id } = req.query;  // ดึงค่า role และ user_id จาก query param
+
+    let allBudgets;
+
+    // ตรวจสอบ role และกรองข้อมูลตาม role
+    if (role === "admin") {
+      // Admin สามารถดูงบประมาณทุกโครงการ
+      allBudgets = await Budget.findAll({
+        include: [
+          {
+            model: Project,
+            attributes: ["project_id", "project_name"],
+          },
+        ],
+        order: [["spent_at", "DESC"]],
+      });
+    } else if (role === "manager") {
+      // Manager สามารถดูงบประมาณเฉพาะโครงการที่ตนเองรับผิดชอบ
+      allBudgets = await Budget.findAll({
+        include: [
+          {
+            model: Project,
+            attributes: ["project_id", "project_name"],
+            where: { created_by: user_id },  // กรองตามโครงการที่ manager รับผิดชอบ
+          },
+        ],
+        order: [["spent_at", "DESC"]],
+      });
+    } else if (role === "user") {
+      // User สามารถดูงบประมาณเฉพาะโครงการที่ตัวเองเกี่ยวข้อง
+      allBudgets = await Budget.findAll({
+        include: [
+          {
+            model: Project,
+            attributes: ["project_id", "project_name"],
+            where: { assigned_to: user_id },  // กรองตามโครงการที่ user รับมอบหมาย
+          },
+        ],
+        order: [["spent_at", "DESC"]],
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
     // ✅ บันทึก Log การเข้าถึงข้อมูล
     if (req.user && req.user.id) {
@@ -102,6 +136,7 @@ exports.getAllBudgets = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 // ✅ สรุปงบประมาณที่ใช้ไป
