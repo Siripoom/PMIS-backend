@@ -16,7 +16,7 @@ db.Report = require("./reportModel");
 db.Budget = require("./budgetModel");
 db.Progress = require("./progressModel");
 db.Resource = require("./resourceModel");
-db.ProjectResource = require("./ProjectResourceModel");
+//db.ProjectResource = require("./ProjectResourceModel");
 db.Notification = require("./notificationModel");
 
 // ✅ กำหนดความสัมพันธ์
@@ -35,8 +35,8 @@ const app = express();
 app.use(express.json());
 
 // ✅ นำเข้า Routes
-const reportRoutes = require("./routes/reportRoutes");
-app.use("/api/reports", reportRoutes);
+//const reportRoutes = require("./routes/reportRoutes");
+//app.use("/api/reports", reportRoutes);
 
 // ✅ Start Server
 const PORT = process.env.PORT || 3000;

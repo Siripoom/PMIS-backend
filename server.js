@@ -28,7 +28,7 @@ const progressRoutes = require("./routes/progressRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
 const projectResourceRoutes = require("./routes/projectResourceRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
-const reportRoutes = require("./routes/reportRoutes");
+//const reportRoutes = require("./routes/reportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 
 // Create an Express app
@@ -56,7 +56,7 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/resource", resourceRoutes);
 app.use("/api/projectResource", projectResourceRoutes);
 app.use("/api/budget", budgetRoutes);
-app.use("/api/reports", reportRoutes);
+//app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 // Simple route for testing
