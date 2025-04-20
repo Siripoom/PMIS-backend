@@ -65,12 +65,38 @@ const createResource = async (req, res) => {
 // ดึงข้อมูลทรัพยากรทั้งหมด
 const getAllResources = async (req, res) => {
     try {
-        const resources = await Resource.findAll();
-        res.status(200).json(resources);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+      const { role, user_id } = req.query;  // ดึงค่า role และ user_id จาก query param
+  
+      let resources;
+  
+      if (role === "admin") {
+        // Admin สามารถดูทรัพยากรทั้งหมด
+        resources = await Resource.findAll();
+      } else if (role === "manager") {
+        // Manager สามารถดูทรัพยากรที่เกี่ยวข้องกับโครงการที่ตัวเองรับผิดชอบ
+        resources = await Resource.findAll({
+          where: {
+            project_id: user_id,  // สามารถใช้ user_id หรือข้อมูลโครงการที่เกี่ยวข้อง
+          },
+        });
+      } else if (role === "user") {
+        // User สามารถดูทรัพยากรที่ตนเองขอใช้
+        resources = await Resource.findAll({
+          where: {
+            allocated_by: user_id, // กรองทรัพยากรที่ผู้ใช้งานขอใช้
+          },
+        });
+      } else {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+  
+      res.status(200).json(resources);
+    } catch (err) {
+      console.error("❌ Error fetching resources:", err);
+      res.status(500).json({ error: err.message || "Internal Server Error" });
     }
-};
+  };
+  
 
 // ดึงข้อมูลทรัพยากรตาม ID
 const getResourceById = async (req, res) => {

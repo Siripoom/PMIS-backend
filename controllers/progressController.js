@@ -39,39 +39,34 @@ const addProgressUpdate = async (req, res) => {
 
 // ✅ ดึงเปอร์เซ็นต์ความคืบหน้าโครงการ
 const getProjectProgress = async (req, res) => {
-  const { projectId } = req.params;
-
   try {
-    const project = await Project.findByPk(projectId);
-    if (!project) {
-      return res.status(404).json({ message: "Project not found" });
-    }
+    const { role, user_id, projectId } = req.query; // ดึงค่า role, user_id, projectId จาก query param
 
-    const latestProgress = await Progress.findOne({
-      where: { project_id: projectId },
-      order: [["createdAt", "DESC"]],
-    });
+    let projectProgress;
 
-    // ✅ ตรวจสอบหากโครงการยังไม่มี Progress
-    if (!latestProgress) {
-      return res.status(200).json({
-        projectId,
-        progressPercentage: 0, // ✅ หากไม่มีความคืบหน้า ให้คืนค่าเป็น 0%
-        message: "No progress updates found",
+    if (role === "admin") {
+      // Admin สามารถดูความคืบหน้าทุกโครงการ
+      projectProgress = await Progress.findAll({
+        where: { project_id: projectId },
       });
+    } else if (role === "manager") {
+      // Manager ดูความคืบหน้าของโครงการที่ตนเองรับผิดชอบ
+      projectProgress = await Progress.findAll({
+        where: { project_id: projectId, updated_by: user_id },
+      });
+    } else if (role === "user") {
+      // User ดูความคืบหน้าของโครงการที่ตนเองเกี่ยวข้อง
+      projectProgress = await Progress.findAll({
+        where: { project_id: projectId, updated_by: user_id },
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
-    // ✅ บันทึก Log การดึงความคืบหน้าโครงการ
-    if (req.user && req.user.id) {
-      await createLog(req.user.id, `ดึงเปอร์เซ็นต์ความคืบหน้าของโครงการ ${projectId}`, req);
-    }
-
-    res.status(200).json({
-      projectId,
-      progressPercentage: latestProgress.progress,
-    });
+    res.status(200).json({ projectProgress });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error fetching project progress:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
 

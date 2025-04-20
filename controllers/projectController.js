@@ -77,13 +77,35 @@ const createProject = async (req, res) => {
 // ✅ Get All Projects
 const getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.findAll();
-    res.status(200).json({ total:projects.length,projects });
+    const { role, user_id } = req.query;  // ดึงค่า role และ user_id จาก query param
+
+    let projects;
+
+    if (role === "admin") {
+      // Admin สามารถดูข้อมูลโครงการทั้งหมด
+      projects = await Project.findAll();
+    } else if (role === "manager") {
+      // Manager สามารถดูโครงการที่ตัวเองเป็นเจ้าของ
+      projects = await Project.findAll({ where: { created_by: user_id } });
+    } else if (role === "user") {
+      // User สามารถดูโครงการที่ตัวเองได้รับมอบหมาย
+      projects = await Project.findAll({
+        where: {
+          assigned_to: user_id,  // หากโครงการมี field `assigned_to` ที่เก็บ user_id
+        },
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    res.status(200).json({ total: projects.length, projects });
   } catch (err) {
     console.error("❌ Error fetching projects:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 };
+
+
 
 // ✅ Get Project By ID
 const getProjectById = async (req, res) => {
