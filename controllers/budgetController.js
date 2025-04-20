@@ -142,33 +142,44 @@ exports.getAllBudgets = async (req, res) => {
 // ✅ สรุปงบประมาณที่ใช้ไป
 exports.getBudgetSummary = async (req, res) => {
   try {
-    const { role, user_id, project_id } = req.query; // ดึง role, user_id, และ project_id จาก query param
+    const { project_id } = req.params;
 
-    let budgetSummary;
-
-    if (role === "admin") {
-      // Admin ดูงบประมาณทุกโครงการ
-      budgetSummary = await Budget.findAll({
-        where: { project_id },
-      });
-    } else if (role === "manager") {
-      // Manager ดูงบประมาณของโครงการที่ตนเองรับผิดชอบ
-      budgetSummary = await Budget.findAll({
-        where: { project_id, created_by: user_id },
-      });
-    } else if (role === "user") {
-      // User ดูงบประมาณของโครงการที่ตนเองเกี่ยวข้อง
-      budgetSummary = await Budget.findAll({
-        where: { project_id, allocated_by: user_id },
-      });
-    } else {
-      return res.status(400).json({ message: "Invalid role" });
+    if (!project_id) {
+      return res.status(400).json({ error: "กรุณาระบุ project_id" });
     }
 
-    res.status(200).json({ budgetSummary });
-  } catch (err) {
-    console.error("❌ Error fetching budget summary:", err);
-    res.status(500).json({ error: err.message || "Internal Server Error" });
+    // 🔹 ดึงงบประมาณทั้งหมดที่จัดสรรให้โครงการ
+    const budgetTotal = await Budget.sum("amount", { where: { project_id, description: "งบประมาณเริ่มต้น" } }) || 0;
+
+    // 🔹 คำนวณค่าใช้จ่ายทั้งหมดที่ใช้ไป
+    const totalSpent = await Budget.sum("amount", { where: { project_id, description: { [Op.not]: "งบประมาณเริ่มต้น" } } }) || 0;
+
+    // 🔹 คำนวณงบประมาณคงเหลือ
+    const budgetRemaining = budgetTotal - totalSpent;
+
+    // 🔹 ดึงรายละเอียดค่าใช้จ่ายทั้งหมด
+    const expenses = await Budget.findAll({
+      where: { project_id },
+      attributes: ["budget_id", "amount", "description", "spent_by", "spent_at"],
+      order: [["spent_at", "DESC"]],
+    });
+
+    // ✅ บันทึก Log การดูสรุปงบประมาณ
+    if (req.user && req.user.id) {
+      await createLog(req.user.id, `ดูสรุปงบประมาณของโครงการ ${project_id}`, req);
+    }
+
+    res.status(200).json({
+      project_id,
+      budget_total: budgetTotal,
+      total_spent: totalSpent,
+      budget_remaining: budgetRemaining,
+      expenses,
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching budget summary:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
