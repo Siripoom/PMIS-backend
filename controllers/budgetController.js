@@ -1,13 +1,21 @@
 const Budget = require("../models/budgetModel");
 const Project = require("../models/projectModel");
 const { createLog } = require("../controllers/logController");
-const { sendAutoNotification } = require("../controllers/notificationController");
+const {
+  sendAutoNotification,
+} = require("../controllers/notificationController");
 const { Op } = require("sequelize");
 
 // ✅ บันทึกการใช้จ่าย
 exports.recordExpense = async (req, res) => {
   try {
-    const { project_name, budget_total, budget_spent, budget_remaining, spent_by } = req.body;
+    const {
+      project_name,
+      budget_total,
+      budget_spent,
+      budget_remaining,
+      spent_by,
+    } = req.body;
 
     // ✅ ตรวจสอบค่าที่ต้องมีและแปลงเป็นตัวเลข
     if (
@@ -17,7 +25,9 @@ exports.recordExpense = async (req, res) => {
       isNaN(Number(budget_remaining)) ||
       !spent_by
     ) {
-      return res.status(400).json({ error: "กรุณาระบุข้อมูลให้ครบถ้วน และตรวจสอบว่าตัวเลขถูกต้อง" });
+      return res.status(400).json({
+        error: "กรุณาระบุข้อมูลให้ครบถ้วน และตรวจสอบว่าตัวเลขถูกต้อง",
+      });
     }
 
     // ✅ ค้นหาโครงการตามชื่อ
@@ -27,7 +37,9 @@ exports.recordExpense = async (req, res) => {
       return res.status(404).json({ message: "ไม่พบโครงการนี้ในระบบ" });
     }
 
-    console.log(`📌 พบโครงการ: ${project.project_name}, ID: ${project.project_id}`);
+    console.log(
+      `📌 พบโครงการ: ${project.project_name}, ID: ${project.project_id}`
+    );
 
     // ✅ บันทึกค่าใช้จ่ายลงฐานข้อมูล
     const expense = await Budget.create({
@@ -38,7 +50,9 @@ exports.recordExpense = async (req, res) => {
     });
 
     if (!expense) {
-      return res.status(500).json({ error: "เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย" });
+      return res
+        .status(500)
+        .json({ error: "เกิดข้อผิดพลาดในการบันทึกค่าใช้จ่าย" });
     }
 
     // ✅ แจ้งเตือนเมื่อมีการใช้จ่ายงบประมาณ
@@ -53,7 +67,11 @@ exports.recordExpense = async (req, res) => {
 
     // ✅ บันทึก Log การใช้จ่าย
     if (req.user && req.user.id) {
-      await createLog(req.user.id, `ใช้จ่าย ${budget_spent} บาท ในโครงการ ${project.project_name}`, req);
+      await createLog(
+        req.user.id,
+        `ใช้จ่าย ${budget_spent} บาท ในโครงการ ${project.project_name}`,
+        req
+      );
     }
 
     // ✅ ส่งข้อมูลกลับ
@@ -68,7 +86,6 @@ exports.recordExpense = async (req, res) => {
         spent_by,
       },
     });
-
   } catch (error) {
     console.error("❌ Error recording expense:", error);
     res.status(500).json({ error: error.message });
@@ -78,7 +95,7 @@ exports.recordExpense = async (req, res) => {
 // ✅ ดึงงบประมาณทั้งหมดในระบบ
 exports.getAllBudgets = async (req, res) => {
   try {
-    const { role, user_id } = req.query;  // ดึงค่า role และ user_id จาก query param
+    const { role, user_id } = req.query; // ดึงค่า role และ user_id จาก query param
 
     let allBudgets;
 
@@ -89,7 +106,7 @@ exports.getAllBudgets = async (req, res) => {
         include: [
           {
             model: Project,
-            attributes: ["project_id", "project_name"],
+            attributes: ["project_id", "project_name", "budget"],
           },
         ],
         order: [["spent_at", "DESC"]],
@@ -100,8 +117,8 @@ exports.getAllBudgets = async (req, res) => {
         include: [
           {
             model: Project,
-            attributes: ["project_id", "project_name"],
-            where: { created_by: user_id },  // กรองตามโครงการที่ manager รับผิดชอบ
+            attributes: ["project_id", "project_name", "budget"],
+            where: { created_by: user_id }, // กรองตามโครงการที่ manager รับผิดชอบ
           },
         ],
         order: [["spent_at", "DESC"]],
@@ -112,8 +129,8 @@ exports.getAllBudgets = async (req, res) => {
         include: [
           {
             model: Project,
-            attributes: ["project_id", "project_name"],
-            where: { assigned_to: user_id },  // กรองตามโครงการที่ user รับมอบหมาย
+            attributes: ["project_id", "project_name", "budget"],
+            where: { assigned_to: user_id }, // กรองตามโครงการที่ user รับมอบหมาย
           },
         ],
         order: [["spent_at", "DESC"]],
@@ -127,17 +144,35 @@ exports.getAllBudgets = async (req, res) => {
       await createLog(req.user.id, "ดูรายการงบประมาณทั้งหมด", req);
     }
 
+    //sum project.budget-amount
+    const totalBudgetRemaining = allBudgets.reduce((total, budget) => {
+      const projectBudget = budget.Project ? Number(budget.Project.budget) : 0;
+      return (total += projectBudget);
+    }, 0);
+    const totalBalance = allBudgets.reduce((total, budget) => {
+      const projectBudget = budget.Project ? Number(budget.Project.budget) : 0;
+      return (total = projectBudget - Number(budget.amount));
+    }, 0);
+
     res.status(200).json({
       message: "ดึงข้อมูลงบประมาณทั้งหมดสำเร็จ",
       data: allBudgets,
+      //sum project.budget-amount
+      total: totalBudgetRemaining,
+
+      //sum amount number
+      expense: allBudgets.reduce(
+        (total, budget) => total + Number(budget.amount),
+        0
+      ),
+
+      balance: totalBalance,
     });
   } catch (error) {
     console.error("❌ Error fetching all budgets:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 // ✅ สรุปงบประมาณที่ใช้ไป
 exports.getBudgetSummary = async (req, res) => {
@@ -193,7 +228,6 @@ exports.deleteBudget = async (req, res) => {
     await budget.destroy();
 
     res.status(200).json({ message: "ลบงบประมาณและค่าใช้จ่ายสำเร็จ" });
-
   } catch (error) {
     console.error("❌ Error deleting budget:", error);
     res.status(500).json({ error: error.message });
