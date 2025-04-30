@@ -40,17 +40,6 @@ const trackResourceUsage = async (req, res) => {
         .json({ message: `ไม่พบทรัพยากรชื่อ '${resource_name}'` });
     }
 
-    const updatedResource = await Resource.update(
-      { used_quantity: resource.quantity - used_quantity },
-      { where: { resource_name } }
-    );
-
-    if (updatedResource[0] === 0) {
-      return res
-        .status(400)
-        .json({ message: "Failed to update resource quantity" });
-    }
-
     const project = await Project.findOne({ where: { project_name } });
     if (!project) {
       return res
